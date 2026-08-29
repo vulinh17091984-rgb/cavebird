@@ -18,6 +18,10 @@ jobs:
           sudo apt update
           sudo apt install -y git zip unzip autoconf automake libtool pkg-config libltdl-dev libffi-dev libssl-dev cmake openjdk-17-jdk aidl
 
+      # --- BƯỚC KHÓA LỖI: TỰ ĐỘNG KHỞI TẠO BỘ SDK CHUẨN CỦA GOOGLE ĐỂ CÓ SDKMANAGER ---
+      - name: Setup Android SDK Environment
+        uses: android-actions/setup-android@v3
+
       - name: Install Buildozer and Cython
         run: pip install buildozer cython==0.29.36
 
@@ -27,23 +31,22 @@ jobs:
           touch ~/.android/repositories.cfg
           buildozer android licenses || true
 
-      - name: Clean Old Buildozer Cache
-        run: buildozer android clean || true
-
-      # --- BƯỚC THẦN KỲ: ÉP LIÊN KẾT ĐƯỜNG DẪN AIDL VÀO HỆ THỐNG BUILDOZER ---
+      # Ép liên kết file aidl hệ thống vào đúng thư mục build-tools để chặn mọi ngả đường lỗi aidl
       - name: Force Symlink for Aidl
         run: |
-          # Khởi tạo trước cấu trúc thư mục SDK mà Buildozer sẽ tìm kiếm
           mkdir -p ~/.buildozer/android/platform/android-sdk/build-tools/33.0.0
           mkdir -p ~/.buildozer/android/platform/android-sdk/build-tools/37.0.0
-          
-          # Ép liên kết file aidl hệ thống vào cả 2 thư mục build-tools để chặn mọi ngả đường lỗi
           ln -sf /usr/bin/aidl ~/.buildozer/android/platform/android-sdk/build-tools/33.0.0/aidl
           ln -sf /usr/bin/aidl ~/.buildozer/android/platform/android-sdk/build-tools/37.0.0/aidl
-          echo "Đã ép liên kết đường dẫn Aidl thành công!"
 
+      # ÉP BUỘC: Cấu hình biến môi trường toàn hệ thống bắt Buildozer nhận bộ SDK chuẩn đã cài ở trên
       - name: Build Android APK with Buildozer
-        run: buildozer android debug
+        run: |
+          export ANDROID_SDK_HOME=$ANDROID_HOME
+          export ANDROID_SDK_ROOT=$ANDROID_HOME
+          buildozer android debug
+        env:
+          ANDROID_HOME: ${{ env.ANDROID_HOME }}
 
       - name: Upload Finished APK
         uses: actions/upload-artifact@v4
