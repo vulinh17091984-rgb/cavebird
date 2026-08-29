@@ -1,25 +1,38 @@
-[app]
-title = Cave Bird
-package.name = cavebird
-package.domain = org.game
-source.dir = .
-source.include_exts = py,png,jpg,ttf,json,wav,mp3
-version = 1.0
+name: Build Game APK
+on: [push, workflow_dispatch]
 
-requirements = python3,pygame
-orientation = portrait
-fullscreen = 1
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
 
-# --- KHÓA CỐ ĐỊNH PHIÊN BẢN CHUẨN ĐỂ SỬA LỖI ĐƯỜNG DẪN SDK ---
-android.api = 33
-android.minapi = 21
-android.ndk = 25b
-android.build_tools_version = 33.0.0
-android.skip_update = False
-android.accept_sdk_license = True
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
 
-android.archs = arm64-v8a
+      - name: Install Buildozer Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y git zip unzip autoconf automake libtool pkg-config libltdl-dev libffi-dev libssl-dev cmake openjdk-17-jdk
 
-[buildozer]
-log_level = 2
-warn_on_root = 1
+      - name: Install Buildozer and Cython
+        run: pip install buildozer cython==0.29.36
+
+      # Robot tự động ký nhận bản quyền Google trước khi build
+      - name: Auto Accept Android Licenses
+        run: |
+          mkdir -p ~/.android
+          touch ~/.android/repositories.cfg
+          buildozer android licenses || true
+
+      - name: Build Android APK with Buildozer
+        run: buildozer android debug
+
+      - name: Upload Finished APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: CaveBird-Game-APK
+          path: bin/*.apk
