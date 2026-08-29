@@ -16,9 +16,9 @@ jobs:
       - name: Install Buildozer Dependencies
         run: |
           sudo apt update
-          sudo apt install -y git zip unzip autoconf automake libtool pkg-config libltdl-dev libffi-dev libssl-dev cmake openjdk-17-jdk aidl
+          sudo apt install -y git zip unzip autoconf automake libtool pkg-config libltdl-dev libffi-dev libssl-dev cmake openjdk-17-jdk aidl wget
 
-      # --- BƯỚC THẦN KỲ: TỰ TAY DỰNG SẴN CẤU TRÚC ĐƯỜNG DẪN SDKMANAGER TRUYỀN THỐNG ---
+      # --- ĐÃ SỬA LỖI: Chuyển sang dùng lệnh wget để tải file an toàn từ Google ---
       - name: Pre-install Android Command Line Tools
         run: |
           mkdir -p ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest
@@ -26,7 +26,7 @@ jobs:
           mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
 
           cd /tmp
-          curl -O https://google.com
+          wget https://google.com
           unzip commandlinetools-linux-8512546_latest.zip
           
           cp -r cmdline-tools/* ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/
