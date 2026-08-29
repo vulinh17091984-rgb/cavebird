@@ -16,37 +16,24 @@ jobs:
       - name: Install Buildozer Dependencies
         run: |
           sudo apt update
-          sudo apt install -y git zip unzip autoconf automake libtool pkg-config libltdl-dev libffi-dev libssl-dev cmake openjdk-17-jdk aidl
-
-      # --- BƯỚC KHÓA LỖI: TỰ ĐỘNG KHỞI TẠO BỘ SDK CHUẨN CỦA GOOGLE ĐỂ CÓ SDKMANAGER ---
-      - name: Setup Android SDK Environment
-        uses: android-actions/setup-android@v3
+          sudo apt install -y git zip unzip autoconf automake libtool pkg-config libltdl-dev libffi-dev libssl-dev cmake openjdk-17-jdk
 
       - name: Install Buildozer and Cython
         run: pip install buildozer cython==0.29.36
 
+      # Ép robot tự động tạo file xác nhận đồng ý bản quyền với Google trước khi build
       - name: Auto Accept Android Licenses
         run: |
-          mkdir -p ~/.android
-          touch ~/.android/repositories.cfg
-          buildozer android licenses || true
+          mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
+          echo -e "\n247ae265526c71a2e5135111a00b2a5d2ff2d18d" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license
 
-      # Ép liên kết file aidl hệ thống vào đúng thư mục build-tools để chặn mọi ngả đường lỗi aidl
-      - name: Force Symlink for Aidl
-        run: |
-          mkdir -p ~/.buildozer/android/platform/android-sdk/build-tools/33.0.0
-          mkdir -p ~/.buildozer/android/platform/android-sdk/build-tools/37.0.0
-          ln -sf /usr/bin/aidl ~/.buildozer/android/platform/android-sdk/build-tools/33.0.0/aidl
-          ln -sf /usr/bin/aidl ~/.buildozer/android/platform/android-sdk/build-tools/37.0.0/aidl
+      # Xóa sạch các thư mục SDK lỗi được tải về từ các lượt build trước
+      - name: Clean Old Buildozer Cache
+        run: buildozer android clean || true
 
-      # ÉP BUỘC: Cấu hình biến môi trường toàn hệ thống bắt Buildozer nhận bộ SDK chuẩn đã cài ở trên
       - name: Build Android APK with Buildozer
-        run: |
-          export ANDROID_SDK_HOME=$ANDROID_HOME
-          export ANDROID_SDK_ROOT=$ANDROID_HOME
-          buildozer android debug
-        env:
-          ANDROID_HOME: ${{ env.ANDROID_HOME }}
+        run: buildozer android debug
 
       - name: Upload Finished APK
         uses: actions/upload-artifact@v4
