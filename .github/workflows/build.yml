@@ -1,0 +1,31 @@
+name: Build Game APK
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Buildozer Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y git zip unzip autoconf automake libtool pkg-config libltdl-dev libffi-dev libssl-dev cmake
+
+      - name: Install Buildozer
+        run: pip install buildozer cython==0.29.36
+
+      - name: Build Android APK with Buildozer
+        run: buildozer android debug
+
+      - name: Upload Finished APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: CaveBird-Game-APK
+          path: bin/*.apk
