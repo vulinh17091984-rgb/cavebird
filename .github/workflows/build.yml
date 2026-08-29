@@ -8,50 +8,37 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      # --- BƯỚC KHÓA LỖI LÕI: Ép máy chủ dùng Node 20 chuẩn để chạy bộ Setup Android không bị sập ---
-      - name: Setup Node.js Environment
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
+      # Dùng phiên bản Python 3.10 ổn định nhất cho Pygame di động
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
+      # Cài đặt các gói phụ trợ lõi trực tiếp bằng lệnh Linux
       - name: Install Buildozer Dependencies
         run: |
           sudo apt update
-          sudo apt install -y git zip unzip autoconf automake libtool pkg-config libltdl-dev libffi-dev libssl-dev cmake openjdk-17-jdk aidl
-
-      # Kích hoạt bộ tạo lập SDK tự động chính thức, có Node 20 gánh nên chạy siêu mượt
-      - name: Setup Android SDK Environment
-        uses: android-actions/setup-android@v3
+          sudo apt install -y git zip unzip autoconf automake libtool pkg-config libltdl-dev libffi-dev libssl-dev cmake openjdk-17-jdk
 
       - name: Install Buildozer and Cython
         run: pip install buildozer cython==0.29.36
 
+      # Robot tự động ký duyệt điều khoản Google trước khi chạy để tránh bị khựng lệnh
       - name: Auto Accept Android Licenses
         run: |
           mkdir -p ~/.android
           touch ~/.android/repositories.cfg
           buildozer android licenses || true
 
-      # Ép liên kết file aidl hệ thống vào đúng thư mục build-tools để chặn mọi ngả đường lỗi aidl
-      - name: Force Symlink for Aidl
-        run: |
-          mkdir -p ~/.buildozer/android/platform/android-sdk/build-tools/31.0.0
-          ln -sf /usr/bin/aidl ~/.buildozer/android/platform/android-sdk/build-tools/31.0.0/aidl
+      # Xóa sạch các bộ cài cũ bị lỗi từ các lượt build trước để nhận cấu hình mới trong file .spec
+      - name: Clean Old Buildozer Cache
+        run: buildozer android clean || true
 
-      # Ép Buildozer nhận diện bộ SDK Manager chính chủ đã được Setup tự động ở trên
+      # Cho phép Buildozer tự động tải SDK/NDK theo đúng phiên bản API 31 chúng ta gán trong spec
       - name: Build Android APK with Buildozer
-        run: |
-          export ANDROID_SDK_HOME=$ANDROID_HOME
-          export ANDROID_SDK_ROOT=$ANDROID_HOME
-          buildozer android debug
-        env:
-          ANDROID_HOME: ${{ env.ANDROID_HOME }}
+        run: buildozer android debug
 
+      # Xuất file APK hoàn chỉnh lên mục Artifacts để tải về điện thoại
       - name: Upload Finished APK
         uses: actions/upload-artifact@v4
         with:
