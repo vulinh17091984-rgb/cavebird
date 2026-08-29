@@ -1,4 +1,4 @@
-# obstacle.py - PHẦN 1: KHỞI TẠO ĐỊA HÌNH VỚI KHOẢNG TRỐNG AN TOÀN CHUẨN XÁC
+# obstacle.py - MÃ NGUỒN HOÀN CHỈNH ĐÃ SỬA LỖI MẢNG THAM SỐ RANDOM
 import pygame
 import math
 import random
@@ -12,8 +12,8 @@ class StalactiteObstacle:
         self.speed = 180.0          # Vận tốc pixel chạy trong 1 giây thực tế (180px/s)
         self.passed = False         
 
-        # Tỷ lệ xuất hiện: 0 = Chỉ TRẦN (20%), 1 = Chỉ ĐÁY (20%), 2 = CẢ HAI LỆCH NHAU TRỰC QUAN (60%)
-        self.spawn_style = random.choices([0, 1, 2], weights=[20, 20, 60])[0]
+        # --- ĐÃ SỬA LỖI LÕI: Điền đầy đủ mảng chỉ mục [0, 1, 2] và trọng số [0.2, 0.2, 0.6] ---
+        self.spawn_style = random.choices([0, 1, 2], weights=[0.2, 0.2, 0.6])[0]
 
         self.top_width = random.randint(70, 145)  
         self.bot_width = random.randint(70, 145)  
@@ -110,13 +110,12 @@ class StalactiteObstacle:
                 if 12 < f_rel_x < (current_width - 12):
                     target_list.append((f_rel_x, f_y, (f_rel_x * 0.04 + f_y * 0.04), COLORS["CRYSTAL"] if random.random() < 0.60 else (240, 245, 255)))
 
-    # --- SỬA LỖI ĐỒNG BỘ: Hàm dịch chuyển map đổi thành update_dt ---
     def update_dt(self, step_speed):
         self.x -= step_speed
         self.diamond_x -= step_speed
         if len(self.top_outline) > 0: self.top_outline = [(px - step_speed, py) for px, py in self.top_outline]
         if len(self.bot_outline) > 0: self.bot_outline = [(px - step_speed, py) for px, py in self.bot_outline]
-# obstacle.py - PHẦN 2: DRAW PHÂN LỚP ĐÁ, VA CHẠM ĐOẠN THẲNG & VẬT PHẨM RƠI KHÁC
+
     def _draw_seamless_rock(self, surface, outline_pts, crystal_list, current_width, is_top):
         if len(outline_pts) < 3: return
         pygame.draw.polygon(surface, COLORS["ROCK_BASE"], outline_pts)
@@ -168,13 +167,68 @@ class StalactiteObstacle:
             for i in range(len(self.top_outline) - 1):
                 if self._dist_to_segment(px, py, self.top_outline[i], self.top_outline[i+1]) < pradius: return True
         elif self.spawn_style == 1: 
+# obstacle.py - PHẦN 2: DRAW PHÂN LỚP ĐÁ VÀ KIỂM TRA VA CHẠM KHÔNG BỊ TRÀN Ô
+    def _draw_seamless_rock(self, surface, outline_pts, crystal_list, current_width, is_top):
+        if len(outline_pts) < 3: return
+        pygame.draw.polygon(surface, COLORS["ROCK_BASE"], outline_pts)
+        mid_pts = []
+        base_x = self.x if is_top else (self.x + (self.bot_offset_x if self.spawn_style == 2 else 0))
+        cx = base_x + current_width / 2
+        for px, py in outline_pts:
+            if py == 0 or py == SCREEN_HEIGHT: mid_pts.append((px, py))
+            else: mid_pts.append((px + 4 if px < cx else px - 4, py))
+        if len(mid_pts) > 2: pygame.draw.polygon(surface, COLORS["ROCK_MID"], mid_pts)
+
+        high_pts = []
+        for px, py in outline_pts:
+            if py == 0 or py == SCREEN_HEIGHT: high_pts.append((px, py))
+            else: high_pts.append((px + 8 if px < cx else px - 8, py))
+        if len(high_pts) > 2: pygame.draw.polygon(surface, COLORS["STALACTITE"], high_pts)
+
+        t = pygame.time.get_ticks()
+        for rel_x, cy, wave_offset, c_color in crystal_list:
+            actual_x = base_x + rel_x
+            pulse = math.sin(t / 950 + wave_offset)
+            crystal_alpha = int(95 + pulse * 45)
+            if crystal_alpha > 0:
+                glow_r = 3 + int(abs(pulse) * 1.5)
+                glow_surf = pygame.Surface((glow_r * 2, glow_r * 2), pygame.SRCALPHA)
+                pygame.draw.circle(glow_surf, (*c_color, crystal_alpha), (glow_r, glow_r), glow_r)
+                surface.blit(glow_surf, (int(actual_x - glow_r), int(cy - glow_r)))
+
+    def draw(self, surface):
+        if self.spawn_style in (0, 2): self._draw_seamless_rock(surface, self.top_outline, self.top_crystals, self.top_width, True)
+        if self.spawn_style in (1, 2): self._draw_seamless_rock(surface, self.bot_outline, self.bot_crystals, self.bot_width, False)
+        if self.has_diamond and not self.diamond_collected:
+            t = pygame.time.get_ticks() / 200
+            pulse_y = self.diamond_y + math.sin(t) * 5
+            d_pts = [(self.diamond_x, pulse_y - 8), (self.diamond_x + 6, pulse_y), (self.diamond_x, pulse_y + 8), (self.diamond_x - 6, pulse_y)]
+            pygame.draw.polygon(surface, COLORS["DIAMOND"], d_pts)
+
+    def _dist_to_segment(self, cx, cy, p1, p2):
+        x1, y1 = p1
+        x2, y2 = p2
+        dx, dy = x2 - x1, y2 - y1
+        if dx == 0 and dy == 0: return math.hypot(cx - x1, cy - y1)
+        t = max(0.0, min(1.0, ((cx - x1) * dx + (cy - y1) * dy) / (dx * dx + dy * dy)))
+        return math.hypot(cx - (x1 + t * dx), cy - (y1 + t * dy))
+
+    def check_collision_precise(self, px, py, pradius):
+        # 1. KIỂM TRA VA CHẠM KHỐI TRÊN
+        if self.spawn_style == 0: 
+            if px + pradius < self.x or px - pradius > self.x + self.top_width: return False
+            for i in range(len(self.top_outline) - 1):
+                if self._dist_to_segment(px, py, self.top_outline[i], self.top_outline[i+1]) < pradius: return True
+        # 2. KIỂM TRA VA CHẠM KHỐI DƯỚI
+        elif self.spawn_style == 1: 
             if px + pradius < self.x or px - pradius > self.x + self.bot_width: return False
             for i in range(len(self.bot_outline) - 1):
                 if self._dist_to_segment(px, py, self.bot_outline[i], self.bot_outline[i+1]) < pradius: return True
+        # 3. KIỂM TRA VA CHẠM CẢ HAI KHỐI LỆCH NHAU
         else: 
-            min_bound_x = min(self.x, self.x + self.bot_offset_x)
-            max_bound_x = max(self.x + self.top_width, self.x + self.bot_offset_x + self.bot_width)
-            if px + pradius < min_bound_x or px - pradius > max_bound_x: return False
+            min_bx = min(self.x, self.x + self.bot_offset_x)
+            max_bx = max(self.x + self.top_width, self.x + self.bot_offset_x + self.bot_width)
+            if px + pradius < min_bx or px - pradius > max_bx: return False
             for i in range(len(self.top_outline) - 1):
                 if self._dist_to_segment(px, py, self.top_outline[i], self.top_outline[i+1]) < pradius: return True
             for i in range(len(self.bot_outline) - 1):
