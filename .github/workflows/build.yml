@@ -16,7 +16,6 @@ jobs:
       - name: Install Buildozer Dependencies
         run: |
           sudo apt update
-          # ÉP BUỘC: Cài đặt trực tiếp aidl ở tầng hệ điều hành Linux để sửa lỗi "Aidl not found"
           sudo apt install -y git zip unzip autoconf automake libtool pkg-config libltdl-dev libffi-dev libssl-dev cmake openjdk-17-jdk aidl
 
       - name: Install Buildozer and Cython
@@ -28,9 +27,20 @@ jobs:
           touch ~/.android/repositories.cfg
           buildozer android licenses || true
 
-      # ÉP BUỘC: Xóa sạch bộ nhớ đệm cũ của Buildozer để hệ thống đọc file .spec mới 100%
       - name: Clean Old Buildozer Cache
         run: buildozer android clean || true
+
+      # --- BƯỚC THẦN KỲ: ÉP LIÊN KẾT ĐƯỜNG DẪN AIDL VÀO HỆ THỐNG BUILDOZER ---
+      - name: Force Symlink for Aidl
+        run: |
+          # Khởi tạo trước cấu trúc thư mục SDK mà Buildozer sẽ tìm kiếm
+          mkdir -p ~/.buildozer/android/platform/android-sdk/build-tools/33.0.0
+          mkdir -p ~/.buildozer/android/platform/android-sdk/build-tools/37.0.0
+          
+          # Ép liên kết file aidl hệ thống vào cả 2 thư mục build-tools để chặn mọi ngả đường lỗi
+          ln -sf /usr/bin/aidl ~/.buildozer/android/platform/android-sdk/build-tools/33.0.0/aidl
+          ln -sf /usr/bin/aidl ~/.buildozer/android/platform/android-sdk/build-tools/37.0.0/aidl
+          echo "Đã ép liên kết đường dẫn Aidl thành công!"
 
       - name: Build Android APK with Buildozer
         run: buildozer android debug
