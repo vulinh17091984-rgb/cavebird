@@ -10,11 +10,13 @@ requirements = python3,pygame
 orientation = portrait
 fullscreen = 1
 
-# --- ĐÃ ÉP PHIÊN BẢN 31 SIÊU ỔN ĐỊNH ĐỂ SỬA DỨT ĐIỂM LỖI ĐƯỜNG DẪN SDK ---
+# --- ÉP PHIÊN BẢN CHUẨN ĐỂ KHÔNG BỊ MẤT ĐƯỜNG DẪN SDKMANAGER ---
 android.api = 31
 android.minapi = 21
 android.ndk = 23b
 android.build_tools_version = 31.0.0
+# Khóa cố định Command Line Tools bản 11.0 của Google (bản lưu file sdkmanager ở vị trí truyền thống)
+android.meta_data = "android.sdk_cmdline_tools_version=11.0"
 android.skip_update = False
 android.accept_sdk_license = True
 
