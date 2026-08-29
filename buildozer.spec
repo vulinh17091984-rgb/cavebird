@@ -6,7 +6,7 @@ source.dir = .
 source.include_exts = py
 version = 1.0
 
-requirements = python3,pygame
+requirements = python3, pygame==2.6.1, sdl2_image, sdl2_mixer, sdl2_ttf
 orientation = portrait
 fullscreen = 1
 
