@@ -13,7 +13,7 @@ fullscreen = 1
 # --- ÉP PHIÊN BẢN CHUẨN ĐỂ KHÔNG BỊ MẤT ĐƯỜNG DẪN SDKMANAGER ---
 android.api = 31
 android.minapi = 21
-android.ndk = 23b
+android.ndk = 25c
 android.build_tools_version = 31.0.0
 # Khóa cố định Command Line Tools bản 11.0 của Google (bản lưu file sdkmanager ở vị trí truyền thống)
 android.meta_data = "android.sdk_cmdline_tools_version=11.0"
