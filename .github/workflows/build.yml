@@ -21,6 +21,13 @@ jobs:
       - name: Install Buildozer
         run: pip install buildozer cython==0.29.36
 
+      # --- BƯỚC MỚI: TỰ ĐỘNG CHẤP NHẬN ĐIỀU KHOẢN ANDROID LICENSES ---
+      - name: Accept Android Licenses Automatically
+        run: |
+          mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
+          echo -e "\n247ae265526c71a2e5135111a00b2a5d2ff2d18d" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license
+
       - name: Build Android APK with Buildozer
         run: buildozer android debug
 
