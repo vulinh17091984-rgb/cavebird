@@ -16,21 +16,32 @@ jobs:
       - name: Install Buildozer Dependencies
         run: |
           sudo apt update
-          sudo apt install -y git zip unzip autoconf automake libtool pkg-config libltdl-dev libffi-dev libssl-dev cmake openjdk-17-jdk
+          sudo apt install -y git zip unzip autoconf automake libtool pkg-config libltdl-dev libffi-dev libssl-dev cmake openjdk-17-jdk aidl
 
       - name: Install Buildozer and Cython
         run: pip install buildozer cython==0.29.36
 
-      # Ép robot tự động tạo file xác nhận đồng ý bản quyền với Google trước khi build
-      - name: Auto Accept Android Licenses
+      # --- BƯỚC THẦN KỲ: TỰ TAY DỰNG SẴN CẤU TRÚC ĐƯỜNG DẪN SDKMANAGER TRUYỀN THỐNG ---
+      - name: Pre-install Android Command Line Tools
         run: |
+          # 1. Tạo sẵn toàn bộ hệ thống thư mục ẩn mà Buildozer sẽ tìm kiếm
+          mkdir -p ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest
+          mkdir -p ~/.buildozer/android/platform/android-sdk/tools/bin
           mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
+
+          # 2. Tải trực tiếp bộ Command Line Tools chuẩn mã 8512546 từ máy chủ chính thức của Google
+          cd /tmp
+          curl -O https://google.com
+          unzip commandlinetools-linux-8512546_latest.zip
+          
+          # 3. Sao chép và tạo liên kết (Symlink) file sdkmanager vào cả đường dẫn mới lẫn đường dẫn cũ để Buildozer tìm ngả nào cũng thấy
+          cp -r cmdline-tools/* ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/
+          ln -sf ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager ~/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
+          
+          # 4. Tự động nạp sẵn file ký duyệt chấp nhận tất cả điều khoản bản quyền của Google
           echo -e "\n247ae265526c71a2e5135111a00b2a5d2ff2d18d" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
           echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license
-
-      # Xóa sạch các thư mục SDK lỗi được tải về từ các lượt build trước
-      - name: Clean Old Buildozer Cache
-        run: buildozer android clean || true
+          echo "Đã thiết lập bộ sdkmanager và cấu trúc đường dẫn chuẩn của Google!"
 
       - name: Build Android APK with Buildozer
         run: buildozer android debug
