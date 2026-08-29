@@ -16,9 +16,9 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.RESIZABLE
 display_surf = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Cave Bird: Anh Sang Khe Da")
 
-font_hud = pygame.font.SysFont(None, 24, bold=True)
-font_menu = pygame.font.SysFont(None, 16, bold=True)
-font_logo = pygame.font.SysFont(None, 38, bold=True)
+font_hud = pygame.font.Font(None, 24, bold=True)
+font_menu = pygame.font.Font(None, 16, bold=True)
+font_logo = pygame.font.Font(None, 38, bold=True)
 
 STATE_MENU, STATE_PLAYING, STATE_GAMEOVER = 0, 1, 2
 game_state = STATE_MENU
