@@ -13,7 +13,6 @@ jobs:
       with:
         python-version: '3.10'
 
-    # Bước thiết lập Cache giúp lưu lại SDK/NDK để lần sau không bị lỗi tải mạng
     - name: Cache Buildozer và Android SDK
       uses: actions/cache@v4
       with:
@@ -22,14 +21,15 @@ jobs:
           .buildozer
         key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
 
-    - name: Install Dependencies
+    - name: Install Android Build Dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y build-essential libsqlite3-dev sqlite3 bzip2 libbz2-dev zlib1g-dev libssl-dev openssl libgdbm-dev libgdbm-compat-dev liblzma-dev libreadline-dev libffi-dev uuid-dev libffi7 libssl3
+        sudo apt-get install -y libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
         pip install --upgrade pip
         pip install Cython==0.29.33 buildozer
 
-    - name: Build Android APK
+    - name: Build Android APK with Pygame Backend
       run: |
-        # Chạy biên dịch từng bước giúp giảm thiểu tối đa tình trạng cạn RAM máy ảo
+        # Ép hệ thống chạy đơn luồng giúp máy ảo ổn định bộ nhớ không bị lỗi mạng sập nguồn
         buildozer android debug
