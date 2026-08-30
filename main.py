@@ -1,4 +1,4 @@
-# main.py - PHẦN 1: KHỞI TẠO HỆ THỐNG VÀ ĐỒ HỌA NỀN HANG ĐÁ
+# main.py - PHẦN 1: KHỞI TẠO VÀ CẤU HÌNH ĐỒ HỌA
 import pygame
 import random
 import sys
@@ -10,7 +10,7 @@ from player import CavePlayer, skin_shop
 from lantern import IndependentLantern
 from obstacle import StalactiteObstacle, FallingMagma, ShieldPowerUp
 
-# --- ÉP VÁ LỖI CHÍ MẠNG: Tắt lệnh quét âm thanh để ép robot ra file APK ---
+# --- ÉP VÁ LỖI CHÍ MẠNG: Tắt lệnh quét âm thanh để ép hệ thống xuất file APK an toàn ---
 def play_sfx(sound_obj): pass
 sound_hit = sound_coin = sound_score = sound_bounce = sound_flap = None
 
@@ -57,7 +57,8 @@ def draw_cave_background(surface, is_playing, current_water_level, current_score
     water_surf = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
     pygame.draw.polygon(water_surf, (*COLORS["DIAMOND"], 140), water_poly)
     surface.blit(water_surf, (0, 0))
-# main.py - PHẦN 2: THỰC THỂ KHỞI TẠO VÀ XỬ LÝ SỰ KIỆN CHẠM CẢM ỨNG
+
+# --- KHỞI TẠO THỰC THỂ BAN ĐẦU ---
 player = CavePlayer()
 pipes = []
 independent_lanterns = []
@@ -92,7 +93,7 @@ def reset_game():
     wave_surge_timer = 0
     gameover_input_lock = 0 
     game_state = STATE_PLAYING
-
+# main.py - PHẦN 2: XỬ LÝ SỰ KIỆN, VÒNG LẶP LOGIC VÀ RENDER ĐỒ HỌA
 def handle_events():
     global running, game_state, gameover_input_lock
     for event in pygame.event.get():
@@ -100,8 +101,8 @@ def handle_events():
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             real_w, real_h = screen.get_size()
             scale_ratio = min(real_w / SCREEN_WIDTH, real_h / SCREEN_HEIGHT)
-            mx = int((event.pos - (real_w - int(SCREEN_WIDTH * scale_ratio)) // 2) / scale_ratio)
-            my = int((event.pos - (real_h - int(SCREEN_HEIGHT * scale_ratio)) // 2) / scale_ratio)
+            mx = int((event.pos[0] - (real_w - int(SCREEN_WIDTH * scale_ratio)) // 2) / scale_ratio)
+            my = int((event.pos[1] - (real_h - int(SCREEN_HEIGHT * scale_ratio)) // 2) / scale_ratio)
             if game_state == STATE_PLAYING: player.flap()
             elif game_state == STATE_MENU:
                 if 20 <= mx <= 180 and 20 <= my <= 55:
@@ -128,7 +129,7 @@ def trigger_game_over():
     skin_shop.save_game_data() 
     gameover_input_lock = 45
     game_state = STATE_GAMEOVER
-# main.py - PHẦN 3: LOGIC GAMEPLAY, VẼ GIAO DIỆN VÀ VÒNG LẶP CHÍNH
+
 def update_game_logic_dt(dt):
     global water_level, magma_spawn_timer, shake_timer, shake_intensity, game_state, score
     global is_wave_surging, wave_surge_timer
@@ -163,7 +164,9 @@ def update_game_logic_dt(dt):
             player.x += 240.0 * dt  
             player.trigger_stumble() 
 
-    if len(independent_lanterns) > 0 and independent_lanterns.x < -90: independent_lanterns.pop(0)
+    # Đã sửa lỗi: Lấy phần tử index 0 để kiểm tra tọa độ x
+    if len(independent_lanterns) > 0 and independent_lanterns[0].x < -90: 
+        independent_lanterns.pop(0)
 
     if score > 3:
         magma_spawn_timer += 60 * dt
@@ -173,11 +176,14 @@ def update_game_logic_dt(dt):
 
     for magma in falling_magmas[:]:
         magma.update_dt(dt)
-        if not magma.active: falling_magmas.remove(magma); continue
+        if not magma.active: 
+            falling_magmas.remove(magma)
+            continue
         if magma.y >= exact_water_surface_y:
             magma.active = False
             particle_sys.spawn(magma.x, magma.y, COLORS["DIAMOND"], 6)
-            falling_magmas.remove(magma); continue
+            falling_magmas.remove(magma)
+            continue
         if magma.check_collision(player):
             if player.has_shield:
                 player.has_shield, shake_timer, shake_intensity = False, 15, 5
@@ -220,7 +226,9 @@ def update_game_logic_dt(dt):
             independent_lanterns.append(spawn_anchored_lantern(new_pipe))
             if random.random() < 0.25: shield_items.append(ShieldPowerUp(new_pipe.x - 20, random.randint(140, 390)))
 
-    if len(pipes) > 0 and pipes.x < -240: pipes.pop(0)
+    # Đã sửa lỗi: Lấy phần tử index 0 để kiểm tra tọa độ x hủy ống đá cũ
+    if len(pipes) > 0 and pipes[0].x < -240: 
+        pipes.pop(0)
 
 def render_graphics():
     draw_cave_background(display_surf, game_state == STATE_PLAYING, water_level, score)
@@ -252,6 +260,7 @@ def render_graphics():
         display_surf.blit(font_hud.render(f"DIEM: {score}  |  KY LUC: {skin_shop.high_score}", True, COLORS["TEXT"]), (60, SCREEN_HEIGHT // 2 - 20))
         if gameover_input_lock <= 0: display_surf.blit(font_menu.render("CHAM MAN HINH DE CHOI LAI", True, (220, 220, 220)), (100, SCREEN_HEIGHT // 2 + 40))
 
+# --- VÒNG LẶP CHÍNH CỦA GAME ---
 while running:
     dt = clock.tick(60) / 1000.0
     if dt > 0.1: dt = 0.1 
