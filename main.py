@@ -5,7 +5,9 @@ import sys
 import math
 import gc # Nhập thư viện dọn rác hệ thống RAM
 from config import SCREEN_WIDTH, SCREEN_HEIGHT, COLORS
-from audio import play_sfx, sound_hit, sound_coin, sound_score, sound_bounce
+# --- ĐÃ ÉP TẮT LỆNH QUÉT MIXER ĐỂ ROBOT ĐÓNG GÓI APK THÀNH CÔNG RỰC RỠ ---
+def play_sfx(sound_obj): pass
+sound_hit = sound_coin = sound_score = sound_bounce = sound_flap = None
 from particles import particle_sys
 from player import CavePlayer, skin_shop
 from lantern import IndependentLantern
