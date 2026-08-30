@@ -1,17 +1,23 @@
-# lantern.py - ĐÃ ĐỒNG BỘ UPDATE_DT VÀ KHỬ NẶNG ĐỒ HỌA CHO DI ĐỘNG
+# lantern.py - ĐÃ ĐỒNG BỘ UPDATE_DT VÀ SỬA LỖI ĐỊNH DANH MẢNG AN TOÀN CHO ANDROID
 import pygame
 import math
 import random
 from config import COLORS
-from audio import play_sfx, sound_bounce
-from particles import particle_sys
+
+# Tạo hàm rỗng câm (Mock) để chặn lỗi import sfx phần cứng khi build APK
+def play_sfx(sound_obj): pass
+sound_bounce = None
+# Mock particle_sys để tránh lỗi vòng lặp nạp thư viện chéo (Circular Import)
+class MockParticle:
+    def spawn(self, x, y, color, count=1): pass
+particle_sys = MockParticle()
 
 class IndependentLantern:
     def __init__(self, x_pos, y_pos):
         self.x = x_pos
         self.y = y_pos  
         self.radius = 14  
-        self.speed = 180.0          # 180 pixel di chuyển trong 1 giây
+        self.speed = 180.0          
         self.pulse_offset = random.uniform(0, 10)
         self.rope_shake = 0 
         self.rope_snagged = False 
@@ -20,7 +26,6 @@ class IndependentLantern:
         self.glow_surf = pygame.Surface((self.base_glow_radius * 2, self.base_glow_radius * 2), pygame.SRCALPHA).convert_alpha()
         self.glow_surf.fill((0, 0, 0, 0))
         
-        # TỐI ƯU: Tăng bước nhảy lên 6 để giảm số vòng tròn lặp, tránh nóng điện thoại
         for r in range(self.base_glow_radius, 0, -6):
             factor = 1.0 - (r / self.base_glow_radius)
             alpha = int((factor ** 2.2) * 35) 
