@@ -8,13 +8,11 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      # Dùng phiên bản Python 3.10 ổn định nhất cho Pygame di động
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      # Cài đặt các gói phụ trợ lõi trực tiếp bằng lệnh Linux
       - name: Install Buildozer Dependencies
         run: |
           sudo apt update
@@ -23,24 +21,15 @@ jobs:
       - name: Install Buildozer and Cython
         run: pip install buildozer cython==0.29.33
 
-      # Robot tự động ký duyệt điều khoản Google trước khi chạy để tránh bị khựng lệnh
       - name: Auto Accept Android Licenses
         run: |
           mkdir -p ~/.android
           touch ~/.android/repositories.cfg
           buildozer android licenses || true
 
-      # Xóa sạch các bộ cài cũ bị lỗi từ các lượt build trước để nhận cấu hình mới trong file .spec
-      - name: Clean Old Buildozer Cache
-        run: buildozer android clean || true
-
-      # Cho phép Buildozer tự động tải SDK/NDK theo đúng phiên bản API 31 chúng ta gán trong spec
+      # --- BƯỚC QUAN TRỌNG: ÉP MÁY CHỦ SỬ DỤNG ĐÚNG ĐƯỜNG DẪN NDK 25C TRONG SPEC ĐỂ FIX LỖI DÒNG 1 ---
       - name: Build Android APK with Buildozer
-        run: buildozer android debug
-
-      # Xuất file APK hoàn chỉnh lên mục Artifacts để tải về điện thoại
-      - name: Upload Finished APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: CaveBird-Game-APK
-          path: bin/*.apk
+        run: |
+          export ANDROID_NDK_HOME=$HOME/.buildozer/android/platform/android-ndk-r25c
+          export ANDROID_NDK_ROOT=$HOME/.buildozer/android/platform/android-ndk-r25c
+          buildozer android debug
