@@ -22,8 +22,11 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install buildozer cython==0.29.33
-          # ÉP BUỘC: Nâng cấp bản vá lỗi đồ họa độc lập cho python-for-android để fix lỗi dòng 1
           pip install --upgrade python-for-android
+
+      # --- BƯỚC KHÓA LỖI: Ép xóa sạch toàn bộ bộ nhớ đệm lỗi cũ để robot quét lại code mới tinh ---
+      - name: Clean Buildozer Cache
+        run: buildozer android clean || true
 
       - name: Auto Accept Android Licenses
         run: |
