@@ -3,7 +3,10 @@ import pygame
 import math
 import random
 from config import SCREEN_HEIGHT, COLORS
-from particles import particle_sys
+
+class MockParticle:
+    def spawn(self, x, y, color, count=1): pass
+particle_sys = MockParticle()
 
 class StalactiteObstacle:
     def __init__(self, x_pos):
@@ -11,10 +14,7 @@ class StalactiteObstacle:
         self.gap = 165              
         self.speed = 180.0          
         self.passed = False         
-
-        # Đã điền mảng trị số chuẩn: 0=Trần, 1=Đáy, 2=CẢ HAI KHỐI LỆCH NHAU
         self.spawn_style = random.choices([0, 1, 2], weights=[0.2, 0.2, 0.6])[0]
-
         self.top_width = random.randint(70, 145)  
         self.bot_width = random.randint(70, 145)  
         self.bot_offset_x = random.randint(-95, 95)
@@ -36,7 +36,6 @@ class StalactiteObstacle:
         self.top_block_style = random.randint(0, 1)
         self.bot_block_style = random.randint(0, 1)
 
-        # --- SINH VÁCH TRẦN HANG ---
         self.top_outline = []
         if self.spawn_style in (0, 2): 
             self.top_outline.append((self.x, 0))
@@ -59,7 +58,6 @@ class StalactiteObstacle:
                 self.top_outline.append((hx + r_w * 1.4 + random.uniform(0.5, 1.5), hy * 0.35))
             self.top_outline.append((self.x + self.top_width, 0))
 
-        # --- SINH VÁCH ĐÁY HANG ---
         self.bot_outline = []
         if self.spawn_style in (1, 2): 
             bx = self.x + (self.bot_offset_x if self.spawn_style == 2 else 0)
@@ -104,13 +102,13 @@ class StalactiteObstacle:
                 f_y = py * random.uniform(0.65, 0.85) if is_top else SCREEN_HEIGHT - (SCREEN_HEIGHT - py) * random.uniform(0.65, 0.85)
                 if 12 < f_rel_x < (current_width - 12):
                     target_list.append((f_rel_x, f_y, (f_rel_x * 0.04 + f_y * 0.04), COLORS["CRYSTAL"] if random.random() < 0.60 else (240, 245, 255)))
-
+# obstacle.py - PHẦN 2: HÀM DRAW VÀ THUẬT TOÁN KIỂM TRA VA CHẠM CHUẨN XÁC
     def update_dt(self, step_speed):
         self.x -= step_speed
         self.diamond_x -= step_speed
         if len(self.top_outline) > 0: self.top_outline = [(px - step_speed, py) for px, py in self.top_outline]
         if len(self.bot_outline) > 0: self.bot_outline = [(px - step_speed, py) for px, py in self.bot_outline]
-# obstacle.py - PHẦN 2: HÀM DRAW VÀ THUẬT TOÁN KIỂM TRA VA CHẠM CHUẨN XÁC
+
     def _draw_seamless_rock(self, surface, outline_pts, crystal_list, current_width, is_top):
         if len(outline_pts) < 3: return
         pygame.draw.polygon(surface, COLORS["ROCK_BASE"], outline_pts)
@@ -179,7 +177,6 @@ class StalactiteObstacle:
         if self.has_diamond and not self.diamond_collected:
             if math.hypot(self.diamond_x - player_x, self.diamond_y - player_y) < player_radius + 8:
                 self.diamond_collected = True
-                particle_sys.spawn(self.diamond_x, self.diamond_y, COLORS["DIAMOND"], 12)
                 return True
         return False
 
@@ -195,11 +192,8 @@ class FallingMagma:
     def update_dt(self, dt):
         self.x += self.speed_x * dt
         self.y += self.speed_y * dt
-        if random.random() < 15.0 * dt:
-            particle_sys.spawn(self.x, self.y, COLORS["MAGMA"], 1)
         if self.y > SCREEN_HEIGHT:
             self.active = False
-            particle_sys.spawn(self.x, self.y, COLORS["MAGMA"], 6) 
 
     def draw(self, surface):
         if not self.active: return
@@ -236,6 +230,5 @@ class ShieldPowerUp:
         if self.collected: return False
         if math.hypot(self.x - player.x, self.y - player.y) < self.radius + player.radius:
             self.collected = True
-            particle_sys.spawn(self.x, self.y, COLORS["SHIELD_GLOW"], 15) 
             return True
         return False
