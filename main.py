@@ -1,24 +1,25 @@
-# main.py - PHẦN 1: KHỞI TẠO HỆ THỐNG & ĐỒ HỌA NỀN ĐỒNG BỘ ĐIỆN THOẠI
+# main.py - PHẦN 1: KHỞI TẠO HỆ THỐNG VÀ ĐỒ HỌA NỀN HANG ĐÁ
 import pygame
 import random
 import sys
 import math
-import gc # Nhập thư viện dọn rác hệ thống RAM
+import gc
 from config import SCREEN_WIDTH, SCREEN_HEIGHT, COLORS
-# --- ĐÃ ÉP TẮT LỆNH QUÉT MIXER ĐỂ ROBOT ĐÓNG GÓI APK THÀNH CÔNG RỰC RỠ ---
-def play_sfx(sound_obj): pass
-sound_hit = sound_coin = sound_score = sound_bounce = sound_flap = None
 from particles import particle_sys
 from player import CavePlayer, skin_shop
 from lantern import IndependentLantern
 from obstacle import StalactiteObstacle, FallingMagma, ShieldPowerUp
+
+# --- ÉP VÁ LỖI CHÍ MẠNG: Tắt lệnh quét âm thanh để ép robot ra file APK ---
+def play_sfx(sound_obj): pass
+sound_hit = sound_coin = sound_score = sound_bounce = sound_flap = None
 
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.RESIZABLE)
 display_surf = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Cave Bird: Anh Sang Khe Da")
 
-# --- ĐÃ ÉP ĐƯỜNG DẪN FONT THỰC TẾ ĐỂ CHẠY MƯỢT TRÊN ANDROID ---
+# Sử dụng tệp font.ttf thực tế đã tải lên kho GitHub của bạn
 font_hud = pygame.font.Font("font.ttf", 24)
 font_menu = pygame.font.Font("font.ttf", 16)
 font_logo = pygame.font.Font("font.ttf", 38)
@@ -26,7 +27,6 @@ font_logo = pygame.font.Font("font.ttf", 38)
 STATE_MENU, STATE_PLAYING, STATE_GAMEOVER = 0, 1, 2
 game_state = STATE_MENU
 clock = pygame.time.Clock()
-
 is_wave_surging = False
 wave_surge_timer = 0
 
@@ -45,7 +45,6 @@ def draw_cave_background(surface, is_playing, current_water_level, current_score
     global_bobbing = math.cos(t * 1.5) * 16.0 if is_wave_surging else math.cos(t * 0.8) * 3.0
     
     water_poly = []
-    # TỐI ƯU: Tăng bước nhảy lên 40 để làm phẳng bớt điểm neo sóng nước, giải phóng CPU di động
     for x in range(0, SCREEN_WIDTH + 10, 40): 
         wave_1 = math.sin(x * 0.014 + t * 0.8)
         wave_2 = math.cos(x * 0.04 - t * 1.3)
@@ -58,13 +57,12 @@ def draw_cave_background(surface, is_playing, current_water_level, current_score
     water_surf = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
     pygame.draw.polygon(water_surf, (*COLORS["DIAMOND"], 140), water_poly)
     surface.blit(water_surf, (0, 0))
-# main.py - PHẦN 2: QUẢN LÝ THỰC THỂ & XỬ LÝ SỰ KIỆN
+# main.py - PHẦN 2: THỰC THỂ KHỞI TẠO VÀ XỬ LÝ SỰ KIỆN CHẠM CẢM ỨNG
 player = CavePlayer()
 pipes = []
 independent_lanterns = []
 falling_magmas = []
 shield_items = []
-
 score = 0
 water_level = 40
 magma_spawn_timer = 0
@@ -102,8 +100,8 @@ def handle_events():
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             real_w, real_h = screen.get_size()
             scale_ratio = min(real_w / SCREEN_WIDTH, real_h / SCREEN_HEIGHT)
-            mx = int((event.pos[0] - (real_w - int(SCREEN_WIDTH * scale_ratio)) // 2) / scale_ratio)
-            my = int((event.pos[1] - (real_h - int(SCREEN_HEIGHT * scale_ratio)) // 2) / scale_ratio)
+            mx = int((event.pos - (real_w - int(SCREEN_WIDTH * scale_ratio)) // 2) / scale_ratio)
+            my = int((event.pos - (real_h - int(SCREEN_HEIGHT * scale_ratio)) // 2) / scale_ratio)
             if game_state == STATE_PLAYING: player.flap()
             elif game_state == STATE_MENU:
                 if 20 <= mx <= 180 and 20 <= my <= 55:
@@ -117,7 +115,7 @@ def handle_events():
             if game_state == STATE_PLAYING: player.flap()
             elif game_state == STATE_MENU: reset_game()
             elif game_state == STATE_GAMEOVER and gameover_input_lock <= 0: reset_game()
-# main.py - PHẦN 3: LOGIC VÒNG LẶP CHÍNH CHUẨN HOÁ THEO TIME ĐỒNG BỘ
+
 def trigger_game_over():
     global game_state, shake_timer, shake_intensity, score, gameover_input_lock
     player.is_dead = True
@@ -130,13 +128,12 @@ def trigger_game_over():
     skin_shop.save_game_data() 
     gameover_input_lock = 45
     game_state = STATE_GAMEOVER
-
+# main.py - PHẦN 3: LOGIC GAMEPLAY, VẼ GIAO DIỆN VÀ VÒNG LẶP CHÍNH
 def update_game_logic_dt(dt):
     global water_level, magma_spawn_timer, shake_timer, shake_intensity, game_state, score
     global is_wave_surging, wave_surge_timer
     
     step_speed = 180.0 * dt
-    
     if score > 0 and score % 5 == 0:
         water_level += ((115 + int(math.sin(pygame.time.get_ticks() / 180) * 12)) - water_level) * 3.0 * dt
     else: water_level += (40 - water_level) * 1.8 * dt 
@@ -166,7 +163,7 @@ def update_game_logic_dt(dt):
             player.x += 240.0 * dt  
             player.trigger_stumble() 
 
-    if len(independent_lanterns) > 0 and independent_lanterns[0].x < -90: independent_lanterns.pop(0)
+    if len(independent_lanterns) > 0 and independent_lanterns.x < -90: independent_lanterns.pop(0)
 
     if score > 3:
         magma_spawn_timer += 60 * dt
@@ -223,8 +220,8 @@ def update_game_logic_dt(dt):
             independent_lanterns.append(spawn_anchored_lantern(new_pipe))
             if random.random() < 0.25: shield_items.append(ShieldPowerUp(new_pipe.x - 20, random.randint(140, 390)))
 
-    if len(pipes) > 0 and pipes[0].x < -240: pipes.pop(0)
-# main.py - PHẦN 4: GIAO DIỆN UI & VÒNG LẶP CHẠY GAME CHÍNH ĐIỆN THOẠI
+    if len(pipes) > 0 and pipes.x < -240: pipes.pop(0)
+
 def render_graphics():
     draw_cave_background(display_surf, game_state == STATE_PLAYING, water_level, score)
     if game_state in (STATE_PLAYING, STATE_GAMEOVER):
@@ -255,11 +252,9 @@ def render_graphics():
         display_surf.blit(font_hud.render(f"DIEM: {score}  |  KY LUC: {skin_shop.high_score}", True, COLORS["TEXT"]), (60, SCREEN_HEIGHT // 2 - 20))
         if gameover_input_lock <= 0: display_surf.blit(font_menu.render("CHAM MAN HINH DE CHOI LAI", True, (220, 220, 220)), (100, SCREEN_HEIGHT // 2 + 40))
 
-# --- VÒNG LẶP CHẠY GAME CHÍNH ĐỒNG BỘ DELTA TIME ---
 while running:
-    # Trích xuất số mili-giây trôi qua đổi ra giây thực tế
     dt = clock.tick(60) / 1000.0
-    if dt > 0.1: dt = 0.1 # Khóa trần chống văng bản đồ khi đứng máy
+    if dt > 0.1: dt = 0.1 
     
     player.skin = skin_shop.current_skin 
     handle_events()
@@ -286,8 +281,6 @@ while running:
     screen.fill((0, 0, 0))
     screen.blit(scaled_surf, ((real_w - new_w) // 2 + render_offset_x, (real_h - new_h) // 2 + render_offset_y))
     pygame.display.flip()
-    
-    # 🌟 HIỆU NĂNG ANDROID: Kích hoạt dọn rác bộ nhớ đệm RAM để máy chạy nhẹ tênh
     gc.collect()
 
 pygame.quit()
