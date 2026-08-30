@@ -7,7 +7,7 @@ source.include_exts = py, ttf
 version = 1.0
 
 # KHÓA CỐ ĐỊNH: Rút gọn yêu cầu để robot đám mây đóng gói mượt mà, không đi tìm file rác
-requirements = python3, pygame==2.5.2
+requirements = python3, pygame==2.6.0
 
 orientation = portrait
 fullscreen = 1
