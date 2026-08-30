@@ -8,7 +8,7 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      # Sử dụng bộ cài đặt chuyên dụng chính thức, tự vá lỗi tầng dịch C cho Pygame
+      # --- ĐÃ SỬA LỖI CHÍNH TẢ: Viết hoa chuẩn xác chữ K trong ArtemvK để kích hoạt robot ---
       - name: Build Android APK with Buildozer Action
         uses: ArtemvK/buildozer-action@v1
         with:
