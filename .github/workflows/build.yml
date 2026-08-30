@@ -8,10 +8,11 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      # --- ÉP CỐ ĐỊNH PHIÊN BẢN PYTHON 3.9 ĐỂ SỬA TRIỆT ĐỂ LỖI COMPILER C CỦA PYGAME ---
+      - name: Setup Python 3.9
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.9'
 
       - name: Install Buildozer Dependencies
         run: |
@@ -27,7 +28,7 @@ jobs:
           touch ~/.android/repositories.cfg
           buildozer android licenses || true
 
-      # ÉP BUỘC: Xóa sạch rác cũ để tránh robot nạp lại cấu trúc lỗi của bản build 36
+      # Ép robot xóa sạch bộ nhớ đệm lỗi cũ của phiên bản Python 3.10 trước đó
       - name: Clean Buildozer Cache
         run: buildozer android clean || true
 
