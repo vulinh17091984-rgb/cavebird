@@ -3,7 +3,7 @@ title = Cave Bird
 package.name = cavebird
 package.domain = org.game
 source.dir = .
-source.include_exts = py
+source.include_exts = py, ttf
 version = 1.0
 
 requirements = python3, pygame==2.6.0
