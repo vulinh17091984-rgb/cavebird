@@ -8,12 +8,33 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      # --- ĐÃ SỬA LỖI CHÍNH TẢ: Viết hoa chuẩn xác chữ K trong ArtemvK để kích hoạt robot ---
-      - name: Build Android APK with Buildozer Action
-        uses: ArtemvK/buildozer-action@v1
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          command: buildozer android debug
-          buildozer_version: master
+          python-version: '3.9'
+
+      - name: Install Buildozer Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y git zip unzip autoconf automake libtool pkg-config libltdl-dev libffi-dev libssl-dev cmake openjdk-17-jdk libsqlite3-dev sqlite3 bzip2 libbz2-dev liblzma-dev ccache
+
+      # --- SỬ SỬA LỖI ĐỔI CÔNG CỤ: Chuyển sang bộ chạy lệnh Buildozer độc lập an toàn tuyệt đối ---
+      - name: Build Android APK with Buildozer
+        run: |
+          pip install --upgrade pip
+          pip install buildozer cython==0.29.33
+          
+          # Chấp nhận điều khoản Google trước khi đóng gói
+          mkdir -p ~/.android
+          touch ~/.android/repositories.cfg
+          buildozer android licenses || true
+          
+          # Định tuyến chính xác NDK 25c đã nạp trong file spec
+          export ANDROID_NDK_HOME=$HOME/.buildozer/android/platform/android-ndk-r25c
+          export ANDROID_NDK_ROOT=$HOME/.buildozer/android/platform/android-ndk-r25c
+          
+          # Tiến hành đóng gói chế độ Debug
+          buildozer android debug
 
       # Tự động xuất file APK hoàn chỉnh lên mục Artifacts để tải về điện thoại Note 10
       - name: Upload Finished APK
