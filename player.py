@@ -1,12 +1,18 @@
-# player.py - ĐỒNG BỘ VẬT LÝ THEO THỜI GIAN THỰC
+# player.py - PHẦN 1: QUẢN LÝ SKIN VÀ LƯU TRỮ JSON AN TOÀN TRÊN ANDROID
 import pygame
 import math
 import random
 import json
 import os
 from config import SCREEN_HEIGHT, COLORS, SAVE_FILE
-from audio import play_sfx, sound_flap
-from particles import particle_sys
+
+# Tạo hàm câm chặn lỗi quét Driver âm thanh phần cứng trên điện thoại
+def play_sfx(sound_obj): pass
+sound_flap = None
+
+class MockParticle:
+    def spawn(self, x, y, color, count=1): pass
+particle_sys = MockParticle()
 
 class CaveSkinManager:
     def __init__(self):
@@ -52,16 +58,16 @@ class CaveSkinManager:
             pass
 
 skin_shop = CaveSkinManager()
-
+# player.py - PHẦN 2: LỚP NHÂN VẬT CAVEPLAYER VÀ VẬT LÝ THEO DT
 class CavePlayer:
     def __init__(self):
         self.default_x = 80
         self.x = self.default_x
         self.y = SCREEN_HEIGHT // 2
         self.radius = 12
-        self.gravity = 13.68          # Trọng lực chuẩn hóa theo giây
+        self.gravity = 13.68          
         self.velocity = 0
-        self.jump_strength = -230.0    # Lực nhảy chuẩn hóa theo giây
+        self.jump_strength = -230.0    
         self.anim_timer = 0
         self.skin = skin_shop.current_skin
         self.angle = 0
@@ -83,7 +89,6 @@ class CavePlayer:
             self.y += self.velocity * dt
             self.anim_timer += 18.0 * dt
             
-            # Khống chế loạng choạng vấp dây theo time thực
             if self.stumble_timer > 0:
                 self.stumble_timer -= 60 * dt
                 if self.stumble_timer > 28:
@@ -103,7 +108,6 @@ class CavePlayer:
             if self.x < self.default_x: self.x += 30.0 * dt
             elif self.x > self.default_x: self.x -= 30.0 * dt
             
-            # Khống chế nhịp độ sinh hạt đuôi để mượt điện thoại
             self.trail_timer += 60 * dt
             if self.trail_timer >= 4:
                 p_color = COLORS["CRYSTAL"] if self.skin == 1 else COLORS["BAT_BODY"]
