@@ -16,9 +16,10 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.RESIZABLE
 display_surf = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Cave Bird: Anh Sang Khe Da")
 
-font_hud = pygame.font.Font(None, 24)
-font_menu = pygame.font.Font(None, 16)
-font_logo = pygame.font.Font(None, 38)
+# --- ĐÃ ÉP ĐƯỜNG DẪN FONT THỰC TẾ ĐỂ CHẠY MƯỢT TRÊN ANDROID ---
+font_hud = pygame.font.Font("font.ttf", 24)
+font_menu = pygame.font.Font("font.ttf", 16)
+font_logo = pygame.font.Font("font.ttf", 38)
 
 STATE_MENU, STATE_PLAYING, STATE_GAMEOVER = 0, 1, 2
 game_state = STATE_MENU
