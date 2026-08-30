@@ -13,6 +13,10 @@ orientation = portrait
 fullscreen = 1
 android.permissions = INTERNET
 android.api = 33
+# (int) Target Android API
+android.api = 33
+# Ép cố định bộ công cụ biên dịch SDK ổn định (thêm dòng này ngay bên dưới android.api)
+android.build_tools_version = 34.0.0
 android.minapi = 21
 android.ndk = 25c
 android.archs = arm64-v8a
