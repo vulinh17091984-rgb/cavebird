@@ -7,7 +7,7 @@ source.include_exts = py,png,jpg,jpeg,ttf,wav,mp3
 version = 1.0.0
 
 # Sử dụng thư viện pygame chuẩn cho Android
-requirements = python3, pygame==2.6.0
+requirements = python3, pygame
 
 orientation = portrait
 fullscreen = 1
