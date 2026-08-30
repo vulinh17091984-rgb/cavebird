@@ -18,22 +18,23 @@ jobs:
           sudo apt update
           sudo apt install -y git zip unzip autoconf automake libtool pkg-config libltdl-dev libffi-dev libssl-dev cmake openjdk-17-jdk libsqlite3-dev sqlite3 bzip2 libbz2-dev liblzma-dev ccache
 
-      # --- SỬ SỬA LỖI ĐỔI CÔNG CỤ: Chuyển sang bộ chạy lệnh Buildozer độc lập an toàn tuyệt đối ---
-      - name: Build Android APK with Buildozer
+      - name: Install Buildozer and Cython
         run: |
           pip install --upgrade pip
           pip install buildozer cython==0.29.33
-          
-          # Chấp nhận điều khoản Google trước khi đóng gói
+          # ÉP BUỘC: Nâng cấp bản vá lỗi đồ họa độc lập cho python-for-android để fix lỗi dòng 1
+          pip install --upgrade python-for-android
+
+      - name: Auto Accept Android Licenses
+        run: |
           mkdir -p ~/.android
           touch ~/.android/repositories.cfg
           buildozer android licenses || true
-          
-          # Định tuyến chính xác NDK 25c đã nạp trong file spec
+
+      - name: Build Android APK with Buildozer
+        run: |
           export ANDROID_NDK_HOME=$HOME/.buildozer/android/platform/android-ndk-r25c
           export ANDROID_NDK_ROOT=$HOME/.buildozer/android/platform/android-ndk-r25c
-          
-          # Tiến hành đóng gói chế độ Debug
           buildozer android debug
 
       # Tự động xuất file APK hoàn chỉnh lên mục Artifacts để tải về điện thoại Note 10
