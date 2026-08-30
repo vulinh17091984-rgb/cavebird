@@ -1,48 +1,35 @@
 name: Build Game APK
-on: [push, workflow_dispatch]
+on: [push, pull_request]
 
 jobs:
   build:
     runs-on: ubuntu-22.04
+
     steps:
-      - name: Checkout Source Code
-        uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.9'
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
 
-      - name: Install Buildozer Dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y git zip unzip autoconf automake libtool pkg-config libltdl-dev libffi-dev libssl-dev cmake openjdk-17-jdk libsqlite3-dev sqlite3 bzip2 libbz2-dev liblzma-dev ccache
+    # Bước thiết lập Cache giúp lưu lại SDK/NDK để lần sau không bị lỗi tải mạng
+    - name: Cache Buildozer và Android SDK
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.buildozer
+          .buildozer
+        key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
 
-      - name: Install Buildozer and Cython
-        run: |
-          pip install --upgrade pip
-          pip install buildozer cython==0.29.33
-          pip install --upgrade python-for-android
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libsqlite3-dev sqlite3 bzip2 libbz2-dev zlib1g-dev libssl-dev openssl libgdbm-dev libgdbm-compat-dev liblzma-dev libreadline-dev libffi-dev uuid-dev libffi7 libssl3
+        pip install --upgrade pip
+        pip install Cython==0.29.33 buildozer
 
-      # --- BƯỚC KHÓA LỖI: Ép xóa sạch toàn bộ bộ nhớ đệm lỗi cũ để robot quét lại code mới tinh ---
-      - name: Clean Buildozer Cache
-        run: buildozer android clean || true
-
-      - name: Auto Accept Android Licenses
-        run: |
-          mkdir -p ~/.android
-          touch ~/.android/repositories.cfg
-          buildozer android licenses || true
-
-      - name: Build Android APK with Buildozer
-        run: |
-          export ANDROID_NDK_HOME=$HOME/.buildozer/android/platform/android-ndk-r25c
-          export ANDROID_NDK_ROOT=$HOME/.buildozer/android/platform/android-ndk-r25c
-          buildozer android debug
-
-      # Tự động xuất file APK hoàn chỉnh lên mục Artifacts để tải về điện thoại Note 10
-      - name: Upload Finished APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: CaveBird-Game-APK
-          path: bin/*.apk
+    - name: Build Android APK
+      run: |
+        # Chạy biên dịch từng bước giúp giảm thiểu tối đa tình trạng cạn RAM máy ảo
+        buildozer android debug
