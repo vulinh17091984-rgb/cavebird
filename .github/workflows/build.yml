@@ -8,36 +8,14 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      # --- ÉP CỐ ĐỊNH PHIÊN BẢN PYTHON 3.9 ĐỂ SỬA TRIỆT ĐỂ LỖI COMPILER C CỦA PYGAME ---
-      - name: Setup Python 3.9
-        uses: actions/setup-python@v5
+      # Sử dụng bộ cài đặt chuyên dụng chính thức, tự vá lỗi tầng dịch C cho Pygame
+      - name: Build Android APK with Buildozer Action
+        uses: ArtemvK/buildozer-action@v1
         with:
-          python-version: '3.9'
+          command: buildozer android debug
+          buildozer_version: master
 
-      - name: Install Buildozer Dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y git zip unzip autoconf automake libtool pkg-config libltdl-dev libffi-dev libssl-dev cmake openjdk-17-jdk libsqlite3-dev sqlite3 bzip2 libbz2-dev liblzma-dev
-
-      - name: Install Buildozer and Cython
-        run: pip install buildozer cython==0.29.33
-
-      - name: Auto Accept Android Licenses
-        run: |
-          mkdir -p ~/.android
-          touch ~/.android/repositories.cfg
-          buildozer android licenses || true
-
-      # Ép robot xóa sạch bộ nhớ đệm lỗi cũ của phiên bản Python 3.10 trước đó
-      - name: Clean Buildozer Cache
-        run: buildozer android clean || true
-
-      - name: Build Android APK with Buildozer
-        run: |
-          export ANDROID_NDK_HOME=$HOME/.buildozer/android/platform/android-ndk-r25c
-          export ANDROID_NDK_ROOT=$HOME/.buildozer/android/platform/android-ndk-r25c
-          buildozer android debug
-
+      # Tự động xuất file APK hoàn chỉnh lên mục Artifacts để tải về điện thoại Note 10
       - name: Upload Finished APK
         uses: actions/upload-artifact@v4
         with:
