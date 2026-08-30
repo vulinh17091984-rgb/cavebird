@@ -27,12 +27,16 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential libsqlite3-dev sqlite3 bzip2 libbz2-dev zlib1g-dev libssl-dev openssl libgdbm-dev libgdbm-compat-dev liblzma-dev libreadline-dev libffi-dev uuid-dev libffi7 libssl3
         sudo apt-get install -y libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
-        # Cài đặt thư viện bổ trợ hệ thống để chạy được công cụ aidl
         sudo apt-get install -y libstdc++6:i386 zlib1g:i386 openjdk-17-jdk
         pip install --upgrade pip
         pip install Cython==0.29.33 buildozer
 
     - name: Build Android APK with Pygame Backend
       run: |
-        # Ép hệ thống đồng ý các điều khoản bản quyền SDK tự động trước khi build
+        # XÓA BIẾN MÔI TRƯỜNG NDK CỦA GITHUB ĐỂ TRÁNH XUNG ĐỘT PHIÊN BẢN
+        unset ANDROID_NDK_HOME
+        unset ANDROID_NDK_ROOT
+        unset ANDROID_NDK
+        
+        # Đồng ý điều khoản và tiến hành biên dịch
         yes | buildozer android debug
