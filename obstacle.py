@@ -12,7 +12,7 @@ class StalactiteObstacle:
         self.speed = 180.0          # Vận tốc pixel chạy trong 1 giây thực tế (180px/s)
         self.passed = False         
 
-        # --- ĐÃ SỬA LỖI LÕI: Điền đầy đủ mảng chỉ mục [0, 1, 2] và trọng số [0.2, 0.2, 0.6] ---
+        # ĐÃ VÁ LỖI TRỐNG MẢNG: Điền đầy đủ mảng lựa chọn cấu trúc hang đá
         self.spawn_style = random.choices([0, 1, 2], weights=[0.2, 0.2, 0.6])[0]
 
         self.top_width = random.randint(70, 145)  
