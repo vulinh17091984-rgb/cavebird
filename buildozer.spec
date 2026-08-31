@@ -6,8 +6,8 @@ source.dir = .
 source.include_exts = py,png,jpg,jpeg,ttf,wav,mp3
 version = 1.0.0
 
-# ÉP PHIÊN BẢN PYGAME 2.6.0: Sửa triệt để lỗi biên dịch fatal error 'longintrepr.h'
-requirements = python3, pygame==2.6.0
+# ĐỔI SANG PYGAME 2.5.2: Phiên bản ổn định nhất cho Android, cam kết vượt qua lỗi compile create
+requirements = python3, pygame==2.5.2
 
 orientation = portrait
 fullscreen = 1
