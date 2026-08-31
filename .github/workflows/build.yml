@@ -13,14 +13,7 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: Cache Buildozer
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.buildozer
-          .buildozer
-        key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
-
+    # Gỡ bỏ bước Action Cache cũ của GitHub để tránh việc nhồi nhét file rác làm tràn RAM máy ảo
     - name: Install Android Build Dependencies
       run: |
         sudo dpkg --add-architecture i386
@@ -38,13 +31,12 @@ jobs:
         yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager --licenses
         echo "=== Đã tạo đường dẫn liên kết ảo lừa Buildozer thành công ==="
 
-    - name: Force Clear Corrupted Packages & Cache
+    - name: Clean Temporary Distribution Cache
       run: |
-        # Xóa triệt để các gói và tệp tin nạp lỗi của lần build trước để ép hệ thống đồng bộ lại từ đầu
-        rm -rf .buildozer/android/platform/python-for-android/
-        rm -rf .buildozer/android/platform/build-arm64-v8a/
-        rm -rf ~/.buildozer/android/packages/
-        echo "=== Đã dọn dẹp môi trường biên dịch hoàn toàn sạch sẽ ==="
+        # Xóa sạch các thư mục build dở dang để máy ảo có không gian RAM trống lớn nhất
+        rm -rf .buildozer/android/platform/build-arm64-v8a/dists/
+        rm -rf .buildozer/android/platform/build-arm64-v8a/build/
+        echo "=== Đã giải phóng không gian bộ nhớ máy ảo thành công ==="
 
     - name: Build Android APK with Pygame Backend
       run: |
@@ -53,5 +45,5 @@ jobs:
         export ANDROID_NDK_ROOT=/usr/local/lib/android/sdk/ndk/25.2.9519653
         export ANDROID_NDK=/usr/local/lib/android/sdk/ndk/25.2.9519653
         
-        # Tiến hành chạy đóng gói tự động không gán cấu hình cứng
+        # GIỚI HẠN BỘ NHỚ: Ép tiến trình chạy đơn luồng giúp máy ảo ổn định không bị sập nguồn
         buildozer android debug
