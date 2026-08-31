@@ -20,7 +20,7 @@ jobs:
         sudo apt-get install -y build-essential libsqlite3-dev sqlite3 bzip2 libbz2-dev zlib1g-dev libssl-dev openssl libgdbm-dev libgdbm-compat-dev liblzma-dev libreadline-dev libffi-dev uuid-dev libffi7 libssl3
         sudo apt-get install -y libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev unzip openjdk-17-jdk
         pip install --upgrade pip
-        # Cài đặt Cython chuẩn vào hệ thống host chính
+        # Cài đặt Cython bản ổn định nhất hệ thống
         pip install "Cython<3.0.0" python-for-android setuptools wheel build
 
     - name: Setup SDK Manager and Install NDK r25c Officially
@@ -35,16 +35,17 @@ jobs:
         sudo ln -sf /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager /usr/local/lib/android/sdk/tools/bin/sdkmanager
         echo "=== Đã tạo đường dẫn liên kết ảo lừa hệ thống thành công ==="
 
-    - name: Pure Android Compilation via Direct Toolchain (VÁ LỖI CYTHON ẨN)
+    - name: Pure Android Compilation via Direct Toolchain (TẮT CÔ LẬP PIP)
       run: |
         export ANDROID_NDK_HOME=/usr/local/lib/android/sdk/ndk/25.2.9519653
         export ANDROID_NDK_ROOT=/usr/local/lib/android/sdk/ndk/25.2.9519653
         export ANDROID_NDK=/usr/local/lib/android/sdk/ndk/25.2.9519653
         export ANDROID_HOME=/usr/local/lib/android/sdk
         
-        # SỬA LỖI ĐỘC QUYỀN: Cấp quyền kế thừa gói cài đặt từ hệ thống host 
-        # Ép môi trường ảo ngầm của python-for-android phải nhận diện được thư viện Cython
-        export PYTHONPATH=$PYTHONPATH:/home/runner/.local/lib/python3.11/site-packages:/usr/local/lib/python3.11/dist-packages
+        # BIẾN MÔI TRƯỜNG CHÍ MẠNG: Ép pip ngầm không được cô lập môi trường build
+        # Buộc nó phải lấy thư viện Cython có sẵn của máy chủ để dịch code C
+        export PIP_NO_BUILD_ISOLATION=false
+        export PIP_USE_PEP517=false
         
         # BƯỚC 1: Khởi tạo phân phối đồ họa Kivy chuẩn
         p4a create --dist_name=cavebirdkivy --bootstrap=sdl2 --requirements=python3,kivy,cython --arch=arm64-v8a --sdk-dir=$ANDROID_HOME --ndk-dir=$ANDROID_NDK --android_api=34 --ndk-api=21 --color=always
