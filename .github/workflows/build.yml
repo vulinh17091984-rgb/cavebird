@@ -13,6 +13,15 @@ jobs:
       with:
         python-version: '3.11'
 
+    - name: Cache Buildozer (ĐÃ ĐỔI KEY VÁ LỖI BOOTSTRAP)
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.buildozer
+          .buildozer
+        # Đổi chữ 'spec' thành 'kivy-fixed' để ép GitHub Actions xóa trắng cache kẹt cũ
+        key: ${{ runner.os }}-buildozer-kivy-fixed-${{ hashFiles('buildozer.spec') }}
+
     - name: Install Android Build Dependencies
       run: |
         sudo dpkg --add-architecture i386
@@ -32,8 +41,7 @@ jobs:
 
     - name: Force Hard Wipe p4a Corrupted Cache
       run: |
-        # ÉP XÓA CỨNG: Xóa sạch thư mục lưu cấu hình ẩn của python-for-android trong hệ thống máy ảo
-        # Bước này giúp gỡ bỏ hoàn toàn biến kẹt cũ '--bootstrap sdl2 --requirements=python3,pygame'
+        # Quét sạch tất cả các thư mục lưu tạm cục bộ còn sót lại
         rm -rf ~/.local/share/python-for-android/
         rm -rf ~/.cache/pip/
         rm -rf .buildozer/
@@ -42,7 +50,7 @@ jobs:
 
     - name: Force Write Perfect Buildozer Spec
       run: |
-        # Ghi đè file cấu hình Kivy chuẩn xác, đổi bootstrap sang nhân đồ họa chính thức của Kivy App
+        # Thiết lập cấu hình Kivy chuẩn của Google, ép bootstrap tự động nhận nhân Kivy App
         cat << 'EOF' > buildozer.spec
         [app]
         title = Cave Bird
@@ -76,7 +84,7 @@ jobs:
         export ANDROID_NDK=/usr/local/lib/android/sdk/ndk/25.2.9519653
         export ANDROID_HOME=/usr/local/lib/android/sdk
         
-        # Tiến hành dịch sạch hoàn toàn từ đầu
+        # Biên dịch sạch sẽ từ đầu với bộ cache mới
         buildozer android debug
 
     - name: Upload APK Artifact
