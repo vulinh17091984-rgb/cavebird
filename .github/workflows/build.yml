@@ -33,16 +33,23 @@ jobs:
 
     - name: Clean Corrupted Distribution Cache
       run: |
-        # Xóa sạch thư mục phân phối cũ bị lỗi để ép p4a đóng gói lại từ đầu một cách sạch sẽ
         rm -rf .buildozer/android/platform/build-arm64-v8a/dists/
         echo "=== Đã dọn dẹp phân phối lỗi thành công ==="
 
     - name: Build Android APK with Pygame Backend
       run: |
-        # Gỡ bỏ các biến môi trường NDK mặc định của GitHub
+        # Gỡ bỏ các biến môi trường NDK mặc định của GitHub để tránh xung đột
         unset ANDROID_NDK_HOME
         unset ANDROID_NDK_ROOT
         unset ANDROID_NDK
         
-        # Đồng ý điều khoản bản quyền và tiến hành biên dịch
-        yes | buildozer android debug
+        # SỬA LỖI: Tạo trước file chấp nhận điều khoản bản quyền của Google 
+        # Cách này giúp Buildozer tự chạy mượt mà mà không cần dùng lệnh 'yes' gây tràn luồng hệ thống
+        mkdir -p ~/.android
+        touch ~/.android/repositories.cfg
+        mkdir -p .buildozer/android/platform/android-sdk/licenses
+        echo "24a0d11d14e8bbd0222a0f35d013a155d3c3c642" > .buildozer/android/platform/android-sdk/licenses/android-sdk-license
+        echo "84831b9409646a918e30573bab4c9c91346d8abd" > .buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license
+        
+        # Tiến hành build game an toàn
+        buildozer android debug
