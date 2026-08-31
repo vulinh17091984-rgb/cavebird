@@ -38,9 +38,17 @@ jobs:
         yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager --licenses
         echo "=== Đã tạo đường dẫn liên kết ảo lừa Buildozer thành công ==="
 
+    - name: Clean Old Corrupted Cache & Distribution
+      run: |
+        # Xóa triệt để thư mục biên dịch đồ họa cục bộ cũ đang bị kẹt cấu trúc chip đôi cũ
+        rm -rf .buildozer/android/platform/python-for-android/
+        rm -rf .buildozer/android/platform/build-arm64-v8a/
+        rm -rf .buildozer/android/platform/build-arm64-v8a_armeabi-v7a/
+        echo "=== Đã làm sạch toàn bộ Cache phân phối lỗi thành công ==="
+
     - name: Build Android APK with Pygame Backend
       run: |
-        # ÉP HỆ THỐNG GHI ĐÈ ĐƯỜNG DẪN NDK CHUẨN VÀO MÔI TRƯỜNG BIÊN DỊCH
+        # Ép hệ thống ghi đè đường dẫn NDK chuẩn vào môi trường biên dịch
         export ANDROID_NDK_HOME=/usr/local/lib/android/sdk/ndk/25.2.9519653
         export ANDROID_NDK_ROOT=/usr/local/lib/android/sdk/ndk/25.2.9519653
         export ANDROID_NDK=/usr/local/lib/android/sdk/ndk/25.2.9519653
