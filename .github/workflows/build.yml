@@ -31,12 +31,19 @@ jobs:
         pip install --upgrade pip
         pip install Cython==0.29.33 buildozer
 
-    - name: Accept Android System Licenses
+    - name: Setup Virtual SDK Paths for Buildozer
       run: |
-        # Ép đồng ý bản quyền trên kho SDK chính thức của GitHub Actions
+        # ĐÁNH LỪA BUILDOZER: Tạo thư mục ảo tools/bin ngay trong kho SDK hệ thống của GitHub
+        sudo mkdir -p /usr/local/lib/android/sdk/tools/bin
+        
+        # Tạo liên kết ảo (Symlink) trỏ file sdkmanager cũ sang file cmdline-tools mới chính thức
+        sudo ln -sf /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager /usr/local/lib/android/sdk/tools/bin/sdkmanager
+        
+        # Chấp nhận bản quyền điều khoản của Google SDK hệ thống
         yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager --licenses
+        echo "=== Đã tạo đường dẫn liên kết ảo lừa Buildozer thành công ==="
 
     - name: Build Android APK with Pygame Backend
       run: |
-        # Chạy lệnh đóng gói trực tiếp bằng SDK hệ thống đã khai báo trong file spec
+        # Tiến hành chạy đóng gói bằng SDK hệ thống đã được vá liên kết ảo
         buildozer android debug
