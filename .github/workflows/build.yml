@@ -13,15 +13,6 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: Cache Buildozer (ĐÃ ĐỔI KEY VÁ LỖI BOOTSTRAP)
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.buildozer
-          .buildozer
-        # Đổi chữ 'spec' thành 'kivy-fixed' để ép GitHub Actions xóa trắng cache kẹt cũ
-        key: ${{ runner.os }}-buildozer-kivy-fixed-${{ hashFiles('buildozer.spec') }}
-
     - name: Install Android Build Dependencies
       run: |
         sudo dpkg --add-architecture i386
@@ -39,26 +30,26 @@ jobs:
         yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager --licenses
         echo "=== Đã tạo đường dẫn liên kết ảo lừa Buildozer thành công ==="
 
-    - name: Force Hard Wipe p4a Corrupted Cache
+    - name: Wipe Corrupted File and Cache (XỬ LÝ TRIỆT ĐỂ LỖI KẸT SPEC VẬT LÝ)
       run: |
-        # Quét sạch tất cả các thư mục lưu tạm cục bộ còn sót lại
-        rm -rf ~/.local/share/python-for-android/
-        rm -rf ~/.cache/pip/
+        # ÉP XÓA: Xóa bỏ file spec cũ kẹt trong mã nguồn và dọn dẹp thư mục ẩn
+        rm -f buildozer.spec
         rm -rf .buildozer/
         rm -rf ~/.buildozer/
-        echo "=== Môi trường đóng gói đã được làm sạch hoàn toàn ẩn 100% ==="
+        rm -rf ~/.local/share/python-for-android/
+        echo "=== Đã giải phóng hoàn toàn repository khỏi cấu hình cũ ==="
 
-    - name: Force Write Perfect Buildozer Spec
+    - name: Force Write Perfect Kivy Buildozer Spec
       run: |
-        # Thiết lập cấu hình Kivy chuẩn của Google, ép bootstrap tự động nhận nhân Kivy App
+        # Khởi tạo file spec Kivy mới tinh từ đầu, đổi hẳn tên package và loại bỏ hoàn toàn pygame
         cat << 'EOF' > buildozer.spec
         [app]
-        title = Cave Bird
-        package.name = cavebird
+        title = Cave Bird App
+        package.name = cavebirdapp
         package.domain = org.vulinh
         source.dir = .
         source.include_exts = py,png,jpg,jpeg,ttf,wav,mp3
-        version = 1.0.0
+        version = 1.0.1
         requirements = python3, kivy
         orientation = portrait
         fullscreen = 1
@@ -75,7 +66,7 @@ jobs:
         log_level = 0
         warn_on_root = 1
         EOF
-        echo "=== Đã khóa chặt cấu hình Kivy sạch lỗi ==="
+        echo "=== Đã khởi tạo thành công cấu hình Kivy mới tinh ==="
 
     - name: Build Android APK with Kivy Backend
       run: |
@@ -84,7 +75,7 @@ jobs:
         export ANDROID_NDK=/usr/local/lib/android/sdk/ndk/25.2.9519653
         export ANDROID_HOME=/usr/local/lib/android/sdk
         
-        # Biên dịch sạch sẽ từ đầu với bộ cache mới
+        # Tiến hành build sạch sẽ từ đầu với bộ spec Kivy mới tinh
         buildozer android debug
 
     - name: Upload APK Artifact
