@@ -6,8 +6,8 @@ source.dir = .
 source.include_exts = py,png,jpg,jpeg,ttf,wav,mp3
 version = 1.0.0
 
-# KHÓA CHẶT PHIÊN BẢN PYTHON 3.11 (Sửa lỗi lệch phiên bản 3.11 != 3.14.2)
-requirements = python3==3.11, pygame
+# Sử dụng cấu hình mặc định để hệ thống tự đồng bộ lõi Python với hostpython
+requirements = python3, pygame
 
 orientation = portrait
 fullscreen = 1
