@@ -6,8 +6,8 @@ source.dir = .
 source.include_exts = py,png,jpg,jpeg,ttf,wav,mp3
 version = 1.0.0
 
-# Sử dụng thư viện pygame chuẩn cho Android
-requirements = python3, pygame
+# Ép hệ thống dùng Python 3.11 ổn định để p4a không tải nhầm bản v3.14 lỗi mạng nữa
+requirements = python3==3.11, pygame
 
 orientation = portrait
 fullscreen = 1
