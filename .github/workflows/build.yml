@@ -30,18 +30,18 @@ jobs:
         yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager --licenses
         echo "=== Đã tạo đường dẫn liên kết ảo lừa Buildozer thành công ==="
 
-    - name: Wipe Corrupted File and Cache (XỬ LÝ TRIỆT ĐỂ LỖI KẸT SPEC VẬT LÝ)
+    - name: Force Clean Cache and Local Environment
       run: |
-        # ÉP XÓA: Xóa bỏ file spec cũ kẹt trong mã nguồn và dọn dẹp thư mục ẩn
+        # Xóa sạch toàn bộ tệp tin spec và thư mục tạm cục bộ trước khi sinh file mới
         rm -f buildozer.spec
         rm -rf .buildozer/
         rm -rf ~/.buildozer/
         rm -rf ~/.local/share/python-for-android/
-        echo "=== Đã giải phóng hoàn toàn repository khỏi cấu hình cũ ==="
+        echo "=== Đã dọn sạch phân vùng kẹt cấu hình cũ ==="
 
-    - name: Force Write Perfect Kivy Buildozer Spec
+    - name: Force Write New Kivy Spec
       run: |
-        # Khởi tạo file spec Kivy mới tinh từ đầu, đổi hẳn tên package và loại bỏ hoàn toàn pygame
+        # Khởi tạo tệp cấu hình đóng gói Kivy chuẩn hóa
         cat << 'EOF' > buildozer.spec
         [app]
         title = Cave Bird App
@@ -49,7 +49,7 @@ jobs:
         package.domain = org.vulinh
         source.dir = .
         source.include_exts = py,png,jpg,jpeg,ttf,wav,mp3
-        version = 1.0.1
+        version = 1.0.2
         requirements = python3, kivy
         orientation = portrait
         fullscreen = 1
@@ -66,16 +66,20 @@ jobs:
         log_level = 0
         warn_on_root = 1
         EOF
-        echo "=== Đã khởi tạo thành công cấu hình Kivy mới tinh ==="
+        echo "=== Cấu hình Kivy đã sẵn sàng ==="
 
-    - name: Build Android APK with Kivy Backend
+    - name: Build Android APK with Kivy Force Command
       run: |
         export ANDROID_NDK_HOME=/usr/local/lib/android/sdk/ndk/25.2.9519653
         export ANDROID_NDK_ROOT=/usr/local/lib/android/sdk/ndk/25.2.9519653
         export ANDROID_NDK=/usr/local/lib/android/sdk/ndk/25.2.9519653
         export ANDROID_HOME=/usr/local/lib/android/sdk
         
-        # Tiến hành build sạch sẽ từ đầu với bộ spec Kivy mới tinh
+        # BỎ QUA CACHING TỰ ĐỘNG: Gọi trực tiếp toolchain của python-for-android 
+        # Ép hệ thống tạo bản phân phối (dist) sạch theo đúng chuẩn bootstrap của Kivy (webview/webview) thay vì sdl2
+        python3 -m pythonforandroid.toolchain create --dist_name=cavebirdapp --bootstrap=webview --requirements=python3,kivy --arch=arm64-v8a --storage-dir=.buildozer/android/platform/build-arm64-v8a --color=always || true
+        
+        # Gọi lệnh buildozer hoàn tất Gradle
         buildozer android debug
 
     - name: Upload APK Artifact
