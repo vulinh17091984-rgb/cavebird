@@ -33,17 +33,17 @@ jobs:
 
     - name: Setup Virtual SDK Paths for Buildozer
       run: |
-        # ĐÁNH LỪA BUILDOZER: Tạo thư mục ảo tools/bin ngay trong kho SDK hệ thống của GitHub
         sudo mkdir -p /usr/local/lib/android/sdk/tools/bin
-        
-        # Tạo liên kết ảo (Symlink) trỏ file sdkmanager cũ sang file cmdline-tools mới chính thức
         sudo ln -sf /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager /usr/local/lib/android/sdk/tools/bin/sdkmanager
-        
-        # Chấp nhận bản quyền điều khoản của Google SDK hệ thống
         yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager --licenses
         echo "=== Đã tạo đường dẫn liên kết ảo lừa Buildozer thành công ==="
 
     - name: Build Android APK with Pygame Backend
       run: |
-        # Tiến hành chạy đóng gói bằng SDK hệ thống đã được vá liên kết ảo
+        # ÉP HỆ THỐNG GHI ĐÈ ĐƯỜNG DẪN NDK CHUẨN VÀO MÔI TRƯỜNG BIÊN DỊCH
+        export ANDROID_NDK_HOME=/usr/local/lib/android/sdk/ndk/25.2.9519653
+        export ANDROID_NDK_ROOT=/usr/local/lib/android/sdk/ndk/25.2.9519653
+        export ANDROID_NDK=/usr/local/lib/android/sdk/ndk/25.2.9519653
+        
+        # Tiến hành chạy đóng gói đơn luồng sạch sẽ
         buildozer android debug
