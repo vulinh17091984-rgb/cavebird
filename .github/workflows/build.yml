@@ -20,8 +20,8 @@ jobs:
         sudo apt-get install -y build-essential libsqlite3-dev sqlite3 bzip2 libbz2-dev zlib1g-dev libssl-dev openssl libgdbm-dev libgdbm-compat-dev liblzma-dev libreadline-dev libffi-dev uuid-dev libffi7 libssl3
         sudo apt-get install -y libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev unzip openjdk-17-jdk
         pip install --upgrade pip
-        # Cài đặt Cython bản ổn định nhất hệ thống
-        pip install "Cython<3.0.0" python-for-android setuptools wheel build
+        # Cài đặt Cython trực tiếp vào môi trường Python toàn cục của máy chủ
+        pip install "Cython<3.0.0" setuptools wheel build python-for-android
 
     - name: Setup SDK Manager and Install NDK r25c Officially
       run: |
@@ -35,20 +35,21 @@ jobs:
         sudo ln -sf /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager /usr/local/lib/android/sdk/tools/bin/sdkmanager
         echo "=== Đã tạo đường dẫn liên kết ảo lừa hệ thống thành công ==="
 
-    - name: Pure Android Compilation via Direct Toolchain (TẮT CÔ LẬP PIP)
+    - name: Pure Android Compilation via Direct Toolchain (VÁ LỖI CÔ LẬP VENV)
       run: |
         export ANDROID_NDK_HOME=/usr/local/lib/android/sdk/ndk/25.2.9519653
         export ANDROID_NDK_ROOT=/usr/local/lib/android/sdk/ndk/25.2.9519653
         export ANDROID_NDK=/usr/local/lib/android/sdk/ndk/25.2.9519653
         export ANDROID_HOME=/usr/local/lib/android/sdk
         
-        # BIẾN MÔI TRƯỜNG CHÍ MẠNG: Ép pip ngầm không được cô lập môi trường build
-        # Buộc nó phải lấy thư viện Cython có sẵn của máy chủ để dịch code C
-        export PIP_NO_BUILD_ISOLATION=false
-        export PIP_USE_PEP517=false
+        # BIẾN MÔI TRƯỜNG CHÍ MẠNG: Khóa chặt module Python -m build không được tự cô lập môi trường
+        # Buộc lệnh tạo wheel con phải nhận diện được Cython hệ thống
+        export PIP_NO_BUILD_ISOLATION=0
+        export PIP_NO_ISOLATION=1
+        export PYTHONNOUSERSITE=0
         
         # BƯỚC 1: Khởi tạo phân phối đồ họa Kivy chuẩn
-        p4a create --dist_name=cavebirdkivy --bootstrap=sdl2 --requirements=python3,kivy,cython --arch=arm64-v8a --sdk-dir=$ANDROID_HOME --ndk-dir=$ANDROID_NDK --android_api=34 --ndk-api=21 --color=always
+        p4a create --dist_name=cavebirdkivy --bootstrap=sdl2 --requirements=python3,kivy --arch=arm64-v8a --sdk-dir=$ANDROID_HOME --ndk-dir=$ANDROID_NDK --android_api=34 --ndk-api=21 --color=always
         
         # BƯỚC 2: Xuất file cài đặt APK hoàn chỉnh
         p4a apk --dist_name=cavebirdkivy --name="Cave Bird App" --version=1.3.0 --package=org.vulinh.cavebirdkivy --private=. --permission=INTERNET --orientation=portrait --arch=arm64-v8a --android_api=34 --ndk-api=21 --color=always
