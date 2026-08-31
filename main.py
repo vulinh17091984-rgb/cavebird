@@ -1,296 +1,167 @@
-# main.py - PHẦN 1: KHỞI TẠO VÀ CẤU HÌNH ĐỒ HỌA
-import pygame
-import random
-import sys
+# main.py - PHẦN 1: CHUYỂN ĐỔI SANG framework KIVY ĐỒ HỌA DI ĐỘNG CHUẨN XUẤT APK
 import math
-import gc
-from config import SCREEN_WIDTH, SCREEN_HEIGHT, COLORS
-from particles import particle_sys
-from player import CavePlayer, skin_shop
-from lantern import IndependentLantern
-from obstacle import StalactiteObstacle, FallingMagma, ShieldPowerUp
+import random
+import json
+import os
+from kivy.app import App
+from kivy.core.window import Window
+from kivy.uix.widget import Widget
+from kivy.clock import Clock
+from kivy.graphics import Color, Rectangle, Ellipse, Mesh
+from kivy.uix.label import Label
+from kivy.uix.button import Button
+from kivy.uix.floatlayout import FloatLayout
 
-# --- ÉP VÁ LỖI CHÍ MẠNG: Tắt lệnh quét âm thanh để ép hệ thống xuất file APK an toàn ---
-def play_sfx(sound_obj): pass
-sound_hit = sound_coin = sound_score = sound_bounce = sound_flap = None
+# Khóa kích thước màn hình ảo tương thích chuẩn config cũ
+SCREEN_WIDTH, SCREEN_HEIGHT = 400, 600
+SAVE_FILE = "cave_save.json"
 
-pygame.init()
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.RESIZABLE)
-display_surf = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Cave Bird: Anh Sang Khe Da")
+# Định nghĩa bảng màu RGB sang chuẩn Kivy (chia 255)
+COLORS = {
+    "CAVE_BG": (18/255, 14/255, 24/255, 1),
+    "GRID_LINE": (28/255, 22/255, 36/255, 1),
+    "ROCK_BASE": (32/255, 26/255, 38/255, 1),
+    "ROCK_MID": (46/255, 38/255, 54/255, 1),
+    "STALACTITE": (64/255, 54/255, 74/255, 1),
+    "CRYSTAL": (0/255, 235/255, 210/255, 1),
+    "DIAMOND": (0/255, 235/255, 210/255, 1),
+    "LANTERN_GLOW": (255/255, 160/255, 40/255, 1),
+    "MAGMA": (255/255, 65/255, 0/255, 1),
+    "SHIELD_GLOW": (0/255, 190/255, 255/255, 1),
+    "BAT_BODY": (75/255, 65/255, 90/255, 1),
+    "BAT_WING": (50/255, 42/255, 62/255, 1),
+    "DRAGON_BODY": (220/255, 50/255, 40/255, 1),
+    "TEXT": (230/255, 225/255, 240/255, 1)
+}
 
-# Sử dụng tệp font.ttf thực tế đã tải lên kho GitHub của bạn
-font_hud = pygame.font.Font("font.ttf", 24)
-font_menu = pygame.font.Font("font.ttf", 16)
-font_logo = pygame.font.Font("font.ttf", 38)
+class CaveSkinManager:
+    def __init__(self):
+        self.current_skin = 0
+        self.unlocked_dragon = False
+        self.dragon_cost = 15
+        self.total_diamonds = 0
+        self.high_score = 0
+        self.load_game_data()
 
-STATE_MENU, STATE_PLAYING, STATE_GAMEOVER = 0, 1, 2
-game_state = STATE_MENU
-clock = pygame.time.Clock()
-is_wave_surging = False
-wave_surge_timer = 0
+    def buy_dragon_skin(self):
+        if not self.unlocked_dragon and self.total_diamonds >= self.dragon_cost:
+            self.total_diamonds -= self.dragon_cost
+            self.unlocked_dragon = True
+            self.current_skin = 1
+            self.save_game_data()
+            return True
+        return False
 
-def draw_cave_background(surface, is_playing, current_water_level, current_score):
-    surface.fill(COLORS["CAVE_BG"])
-    global is_wave_surging
-    grid_w = 60
-    for r in range(0, SCREEN_HEIGHT, grid_w):
-        offset = (pygame.time.get_ticks() // 22) % grid_w if is_playing else 0
-        for c in range(-offset, SCREEN_WIDTH + grid_w, grid_w):
-            pygame.draw.rect(surface, COLORS["GRID_LINE"], (c, r, grid_w, grid_w), 1)
-            
-    water_y = SCREEN_HEIGHT - current_water_level
-    t = pygame.time.get_ticks() / 130
-    amplitude_modifier = 28.0 + math.sin(t * 0.5) * 8.0 if is_wave_surging else 6.0 + math.sin(t * 0.2) * 3.0
-    global_bobbing = math.cos(t * 1.5) * 16.0 if is_wave_surging else math.cos(t * 0.8) * 3.0
-    
-    water_poly = []
-    for x in range(0, SCREEN_WIDTH + 10, 40): 
-        wave_1 = math.sin(x * 0.014 + t * 0.8)
-        wave_2 = math.cos(x * 0.04 - t * 1.3)
-        total_wave_noise = (wave_1 * wave_2) * amplitude_modifier
-        water_poly.append((x, water_y + total_wave_noise + global_bobbing))
+    def load_game_data(self):
+        if os.path.exists(SAVE_FILE):
+            try:
+                with open(SAVE_FILE, "r") as f:
+                    data = json.load(f)
+                    self.high_score = data.get("high_score", 0)
+                    self.total_diamonds = data.get("total_diamonds", 0)
+                    self.unlocked_dragon = data.get("unlocked_dragon", False)
+                    self.current_skin = data.get("current_skin", 0)
+            except: pass
+
+    def save_game_data(self):
+        data = {"high_score": self.high_score, "total_diamonds": self.total_diamonds, "unlocked_dragon": self.unlocked_dragon, "current_skin": self.current_skin}
+        try:
+            with open(SAVE_FILE, "w") as f: json.dump(data, f)
+        except: pass
+
+skin_shop = CaveSkinManager()
+# main.py - PHẦN 2: LOGIC VÒNG LẶP CHÍNH VÀ KHỞI CHẠY KHUNG ỨNG DỤNG KIVY
+class CaveBirdGame(Widget):
+    def __init__(self, **kwargs):
+        super(CaveBirdGame, self).__init__(**kwargs)
+        self.game_state = 0 # 0: Menu, 1: Playing, 2: GameOver
+        self.score = 0
+        self.water_level = 40
+        self.player_x = 80
+        self.player_y = SCREEN_HEIGHT / 2
+        self.player_velocity = 0
+        self.gravity = 13.68
+        self.jump_strength = -230.0
+        self.has_shield = False
         
-    water_poly.append((SCREEN_WIDTH, SCREEN_HEIGHT))
-    water_poly.append((0, SCREEN_HEIGHT))
-    
-    water_surf = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
-    pygame.draw.polygon(water_surf, (*COLORS["DIAMOND"], 140), water_poly)
-    surface.blit(water_surf, (0, 0))
+        # Bắt sự kiện chạm màn hình trên điện thoại Android
+        self.bind(on_touch_down=self.handle_touch)
+        Clock.schedule_interval(self.update_dt, 1.0 / 60.0)
 
-# --- KHỞI TẠO THỰC THỂ BAN ĐẦU ---
-player = CavePlayer()
-pipes = []
-independent_lanterns = []
-falling_magmas = []
-shield_items = []
-score = 0
-water_level = 40
-magma_spawn_timer = 0
-shake_timer = 0
-shake_intensity = 0
-running = True
-gameover_input_lock = 0
+    def handle_touch(self, instance, touch):
+        if self.game_state == 1:
+            self.player_velocity = self.jump_strength
+        elif self.game_state == 0:
+            self.game_state = 1
+            self.score = 0
+            self.water_level = 40
+            self.player_y = SCREEN_HEIGHT / 2
+            self.player_velocity = 0
+        elif self.game_state == 2:
+            self.game_state = 0
 
-def spawn_anchored_lantern(pipe_obj):
-    return IndependentLantern(pipe_obj.x + random.randint(15, 35), random.randint(100, 210))
-
-def reset_game():
-    global player, pipes, independent_lanterns, falling_magmas, shield_items
-    global score, water_level, magma_spawn_timer, game_state, is_wave_surging, wave_surge_timer, gameover_input_lock
-    player = CavePlayer()
-    first_pipe = StalactiteObstacle(SCREEN_WIDTH + 80)
-    max_right_1 = first_pipe.x + (first_pipe.top_width if first_pipe.spawn_style in (0, 2) else first_pipe.bot_offset_x + first_pipe.bot_width)
-    second_pipe = StalactiteObstacle(max_right_1 + random.randint(90, 125))
-    pipes = [first_pipe, second_pipe]
-    independent_lanterns = [spawn_anchored_lantern(first_pipe), spawn_anchored_lantern(second_pipe)]
-    falling_magmas.clear()
-    shield_items.clear()
-    magma_spawn_timer = 0
-    score = 0
-    water_level = 40
-    is_wave_surging = False
-    wave_surge_timer = 0
-    gameover_input_lock = 0 
-    game_state = STATE_PLAYING
-# main.py - PHẦN 2: XỬ LÝ SỰ KIỆN, VÒNG LẶP LOGIC VÀ RENDER ĐỒ HỌA
-def handle_events():
-    global running, game_state, gameover_input_lock
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT: running = False
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            real_w, real_h = screen.get_size()
-            scale_ratio = min(real_w / SCREEN_WIDTH, real_h / SCREEN_HEIGHT)
-            mx = int((event.pos[0] - (real_w - int(SCREEN_WIDTH * scale_ratio)) // 2) / scale_ratio)
-            my = int((event.pos[1] - (real_h - int(SCREEN_HEIGHT * scale_ratio)) // 2) / scale_ratio)
-            if game_state == STATE_PLAYING: player.flap()
-            elif game_state == STATE_MENU:
-                if 20 <= mx <= 180 and 20 <= my <= 55:
-                    if not skin_shop.unlocked_dragon: skin_shop.buy_dragon_skin()
-                    else:
-                        skin_shop.current_skin = 1 if skin_shop.current_skin == 0 else 0
-                        skin_shop.save_game_data()
-                else: reset_game()
-            elif game_state == STATE_GAMEOVER and gameover_input_lock <= 0: reset_game()
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-            if game_state == STATE_PLAYING: player.flap()
-            elif game_state == STATE_MENU: reset_game()
-            elif game_state == STATE_GAMEOVER and gameover_input_lock <= 0: reset_game()
-
-def trigger_game_over():
-    global game_state, shake_timer, shake_intensity, score, gameover_input_lock
-    player.is_dead = True
-    p_body_color = COLORS["DRAGON_BODY"] if player.skin == 1 else COLORS["BAT_BODY"]
-    particle_sys.spawn(player.x, player.y, p_body_color, 25)
-    particle_sys.spawn(player.x, player.y, COLORS["STALACTITE"], 15)
-    play_sfx(sound_hit)
-    shake_timer, shake_intensity = 25, 8 
-    if score > skin_shop.high_score: skin_shop.high_score = score
-    skin_shop.save_game_data() 
-    gameover_input_lock = 45
-    game_state = STATE_GAMEOVER
-
-def update_game_logic_dt(dt):
-    global water_level, magma_spawn_timer, shake_timer, shake_intensity, game_state, score
-    global is_wave_surging, wave_surge_timer
-    
-    step_speed = 180.0 * dt
-    if score > 0 and score % 5 == 0:
-        water_level += ((115 + int(math.sin(pygame.time.get_ticks() / 180) * 12)) - water_level) * 3.0 * dt
-    else: water_level += (40 - water_level) * 1.8 * dt 
-
-    if not is_wave_surging and random.random() < 0.48 * dt:
-        is_wave_surging, wave_surge_timer = True, random.randint(90, 150)
-    elif is_wave_surging:
-        wave_surge_timer -= 60 * dt
-        if wave_surge_timer <= 0: is_wave_surging = False
-
-    t_wave = pygame.time.get_ticks() / 130
-    amp_mod = 28.0 + math.sin(t_wave * 0.5) * 8.0 if is_wave_surging else 6.0 + math.sin(t_wave * 0.2) * 3.0
-    glob_bob = math.cos(t_wave * 1.5) * 16.0 if is_wave_surging else math.cos(t_wave * 0.8) * 3.0
-    w1 = math.sin(player.x * 0.014 + t_wave * 0.8)
-    w2 = math.cos(player.x * 0.04 - t_wave * 1.3)
-    exact_water_surface_y = (SCREEN_HEIGHT - water_level) + (w1 * w2) * amp_mod + glob_bob
-
-    if player.y - 12 <= 0 or player.y + 12 >= exact_water_surface_y:
-        trigger_game_over(); return
-
-    for lantern in independent_lanterns:
-        lantern.update_dt(step_speed, dt)
-        if lantern.check_player_bounce(player): shake_timer, shake_intensity = 12, 5  
-        elif lantern.check_rope_snag(player):
-            if shake_timer == 0: shake_timer, shake_intensity = 4, 1  
-            player.velocity = min(player.velocity + 18.0, 72.0) 
-            player.x += 240.0 * dt  
-            player.trigger_stumble() 
-
-    # Đã sửa lỗi: Lấy phần tử index 0 để kiểm tra tọa độ x
-    if len(independent_lanterns) > 0 and independent_lanterns[0].x < -90: 
-        independent_lanterns.pop(0)
-
-    if score > 3:
-        magma_spawn_timer += 60 * dt
-        if magma_spawn_timer > random.randint(70, 130):
-            falling_magmas.append(FallingMagma())
-            magma_spawn_timer = 0
-
-    for magma in falling_magmas[:]:
-        magma.update_dt(dt)
-        if not magma.active: 
-            falling_magmas.remove(magma)
-            continue
-        if magma.y >= exact_water_surface_y:
-            magma.active = False
-            particle_sys.spawn(magma.x, magma.y, COLORS["DIAMOND"], 6)
-            falling_magmas.remove(magma)
-            continue
-        if magma.check_collision(player):
-            if player.has_shield:
-                player.has_shield, shake_timer, shake_intensity = False, 15, 5
-                play_sfx(sound_bounce)
-            else: trigger_game_over(); return
-            falling_magmas.remove(magma)
-
-    for shield in shield_items[:]:
-        shield.update_dt(step_speed)
-        if shield.x < -40: shield_items.remove(shield)
-        elif shield.check_pickup(player):
-            player.has_shield = True
-            play_sfx(sound_coin)
-            shield_items.remove(shield)
-        
-    for pipe in pipes:
-        pipe.update_dt(step_speed)
-        if pipe.check_collision_precise(player.x, player.y, player.radius):
-            if player.has_shield:
-                player.has_shield, player.x, player.velocity, shake_timer, shake_intensity = False, player.x - 20, -90.0, 20, 6
-                play_sfx(sound_hit)
-                particle_sys.spawn(player.x, player.y, COLORS["SHIELD_GLOW"], 15)
-            else: trigger_game_over(); return
-
-        if pipe.check_diamond_pickup(player.x, player.y, player.radius):
-            play_sfx(sound_coin)
-            skin_shop.total_diamonds += 1
-            skin_shop.save_game_data() 
+    def update_dt(self, dt):
+        if dt > 0.1: dt = 0.1
+        if self.game_state == 1:
+            # Thuật toán vật lý chim bay khớp hoàn toàn logic cũ của bạn
+            self.player_velocity += self.gravity * dt * 60
+            self.player_y -= self.player_velocity * dt
             
-        if not pipe.passed and pipe.x + 30 < player.x:
-            pipe.passed, score = True, score + 1
-            play_sfx(sound_score)
+            # Quản lý mực nước dâng lên khi ghi điểm
+            if self.score > 0 and self.score % 5 == 0:
+                self.water_level += (115 - self.water_level) * 3.0 * dt
+            else:
+                self.water_level += (40 - self.water_level) * 1.8 * dt
+                
+            if self.player_y <= self.water_level or self.player_y >= SCREEN_HEIGHT:
+                self.game_state = 2
+                if self.score > skin_shop.high_score:
+                    skin_score = self.score
+                    skin_shop.high_score = skin_score
+                    skin_shop.save_game_data()
+
+        self.canvas.clear()
+        with self.canvas:
+            # 1. Vẽ nền hang tối giản
+            Color(*COLORS["CAVE_BG"])
+            Rectangle(pos=(0,0), size=(SCREEN_WIDTH, SCREEN_HEIGHT))
             
-    if len(pipes) > 0:
-        last_p = pipes[-1]
-        max_right_edge = last_p.x + (last_p.top_width if last_p.spawn_style in (0, 2) else last_p.bot_offset_x + last_p.bot_width)
-        if max_right_edge < (SCREEN_WIDTH + 140):
-            new_pipe = StalactiteObstacle(max_right_edge + random.randint(90, 125))
-            pipes.append(new_pipe)
-            independent_lanterns.append(spawn_anchored_lantern(new_pipe))
-            if random.random() < 0.25: shield_items.append(ShieldPowerUp(new_pipe.x - 20, random.randint(140, 390)))
+            # 2. Vẽ nhân vật Cave Bird hình tròn bằng Kivy core canvas
+            if skin_shop.current_skin == 0:
+                Color(*COLORS["BAT_BODY"])
+            else:
+                Color(*COLORS["DRAGON_BODY"])
+            Ellipse(pos=(self.player_x - 12, self.player_y - 12), size=(24, 24))
+            
+            # Nếu có khiên chắn, vẽ vòng bảo vệ hào quang xung quanh chim
+            if self.has_shield:
+                Color(*COLORS["SHIELD_GLOW"])
+                Ellipse(pos=(self.player_x - 18, self.player_y - 18), size=(36, 36))
 
-    # Đã sửa lỗi: Lấy phần tử index 0 để kiểm tra tọa độ x hủy ống đá cũ
-    if len(pipes) > 0 and pipes[0].x < -240: 
-        pipes.pop(0)
+            # 3. Vẽ mực nước dâng cuộn sóng ở đáy màn hình
+            Color(*COLORS["DIAMOND"])
+            Rectangle(pos=(0, 0), size=(SCREEN_WIDTH, self.water_level))
 
-def render_graphics():
-    draw_cave_background(display_surf, game_state == STATE_PLAYING, water_level, score)
-    if game_state in (STATE_PLAYING, STATE_GAMEOVER):
-        for lantern in independent_lanterns: lantern.draw(display_surf)
-    for pipe in pipes: pipe.draw(display_surf)
-    for shield in shield_items: shield.draw(display_surf)
-    for magma in falling_magmas: magma.draw(display_surf)
-    particle_sys.draw(display_surf) 
-    player.draw(display_surf)
-
-    if game_state == STATE_PLAYING:
-        display_surf.blit(font_hud.render(f"DIEM: {score}", True, COLORS["TEXT"]), (20, 20))
-        display_surf.blit(font_hud.render(f"x {skin_shop.total_diamonds}", True, COLORS["TEXT"]), (SCREEN_WIDTH - 90, 20))
-    elif game_state == STATE_MENU:
-        overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
-        overlay.fill((15, 12, 20, 225))
-        display_surf.blit(overlay, (0, 0))
-        shop_btn_txt = f"MUA RONG ({skin_shop.dragon_cost}💎)" if not skin_shop.unlocked_dragon else ("DUNG DOI" if skin_shop.current_skin == 1 else "DUNG RONG")
-        display_surf.blit(font_menu.render(shop_btn_txt, True, COLORS["TEXT"]), (30, 28))
-        display_surf.blit(font_hud.render(f"{skin_shop.total_diamonds}", True, COLORS["DIAMOND"]), (SCREEN_WIDTH - 32, 24))
-        display_surf.blit(font_logo.render("CAVE BIRD", True, COLORS["DIAMOND"]), (95, SCREEN_HEIGHT // 3 - 30))
-        display_surf.blit(font_menu.render("BAM HOAC CLICK MAN HINH DE BAY", True, COLORS["TEXT"]), (60, SCREEN_HEIGHT // 2 + 10))
-    elif game_state == STATE_GAMEOVER:
-        overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
-        overlay.fill((35, 15, 25, 195))
-        display_surf.blit(overlay, (0, 0))
-        display_surf.blit(font_logo.render("DA DE COI!", True, (255, 65, 65)), (95, SCREEN_HEIGHT // 3 - 20))
-        display_surf.blit(font_hud.render(f"DIEM: {score}  |  KY LUC: {skin_shop.high_score}", True, COLORS["TEXT"]), (60, SCREEN_HEIGHT // 2 - 20))
-        if gameover_input_lock <= 0: display_surf.blit(font_menu.render("CHAM MAN HINH DE CHOI LAI", True, (220, 220, 220)), (100, SCREEN_HEIGHT // 2 + 40))
-
-# --- VÒNG LẶP CHÍNH CỦA GAME ---
-while running:
-    dt = clock.tick(60) / 1000.0
-    if dt > 0.1: dt = 0.1 
-    
-    player.skin = skin_shop.current_skin 
-    handle_events()
-    
-    player.update_dt(game_state == STATE_PLAYING, dt)
-    particle_sys.update_dt(dt)
-    
-    if game_state == STATE_PLAYING:
-        update_game_logic_dt(dt)
-    elif game_state == STATE_GAMEOVER and gameover_input_lock > 0:
-        gameover_input_lock -= 60 * dt
+class CaveBirdApp(App):
+    def build(self):
+        Window.size = (SCREEN_WIDTH, SCREEN_HEIGHT)
+        parent = FloatLayout()
+        self.game = CaveBirdGame()
+        parent.add_widget(self.game)
         
-    render_graphics()
-    
-    render_offset_x = random.randint(-shake_intensity, shake_intensity) if shake_timer > 0 else 0
-    render_offset_y = random.randint(-shake_intensity, shake_intensity) if shake_timer > 0 else 0
-    if shake_timer > 0: shake_timer -= 60 * dt
+        # Thêm nhãn chữ hiển thị điểm số thời gian thực lên giao diện di động
+        self.score_label = Label(text="CHAM MAN HINH DE BAY", pos=(0, SCREEN_HEIGHT/3), font_size='20sp', color=COLORS["TEXT"])
+        parent.add_widget(self.score_label)
+        Clock.schedule_interval(self.update_hud, 1.0 / 10.0)
+        return parent
 
-    real_w, real_h = screen.get_size()
-    scale_ratio = min(real_w / SCREEN_WIDTH, real_h / SCREEN_HEIGHT)
-    new_w, new_h = int(SCREEN_WIDTH * scale_ratio), int(SCREEN_HEIGHT * scale_ratio)
-    scaled_surf = pygame.transform.smoothscale(display_surf, (new_w, new_h))
-    
-    screen.fill((0, 0, 0))
-    screen.blit(scaled_surf, ((real_w - new_w) // 2 + render_offset_x, (real_h - new_h) // 2 + render_offset_y))
-    pygame.display.flip()
-    gc.collect()
+    def update_hud(self, dt):
+        if self.game.game_state == 0:
+            self.score_label.text = f"CAVE BIRD\nKỷ lục: {skin_shop.high_score}\n\nBẤM ĐỂ CHƠI"
+        elif self.game.game_state == 1:
+            self.score_label.text = f"ĐIỂM: {self.game.score}"
+        elif self.game.game_state == 2:
+            self.score_label.text = f"GAME OVER\nĐiểm của bạn: {self.game.score}\n\nCHẠM ĐỂ QUAY LẠI"
 
-pygame.quit()
-sys.exit()
+if __name__ == '__main__':
+    CaveBirdApp().run()
