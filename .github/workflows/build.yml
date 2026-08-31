@@ -11,7 +11,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
+        python-version: '3.11'
 
     - name: Cache Buildozer
       uses: actions/cache@v4
@@ -40,10 +40,9 @@ jobs:
 
     - name: Clean Old Corrupted Cache & Distribution
       run: |
-        # Xóa triệt để thư mục biên dịch đồ họa cục bộ cũ đang bị kẹt cấu trúc chip đôi cũ
+        # Xóa triệt để thư mục tải gói cũ để giải phóng liên kết lỗi Python 3.14
         rm -rf .buildozer/android/platform/python-for-android/
         rm -rf .buildozer/android/platform/build-arm64-v8a/
-        rm -rf .buildozer/android/platform/build-arm64-v8a_armeabi-v7a/
         echo "=== Đã làm sạch toàn bộ Cache phân phối lỗi thành công ==="
 
     - name: Build Android APK with Pygame Backend
