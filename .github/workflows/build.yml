@@ -32,18 +32,19 @@ jobs:
 
     - name: Force Wipe Corrupted Build Cache
       run: |
-        # Xóa sạch vùng đệm lỗi cũ để ép hệ thống tải nhân phân phối sạch
+        # Xóa triệt để toàn bộ thư mục .buildozer cũ để gỡ sạch file rác Pygame kẹt trong cache
         rm -rf .buildozer/
         rm -rf ~/.buildozer/
-        echo "=== Đã làm sạch toàn bộ môi trường và bộ nhớ đệm lỗi ==="
+        echo "=== Môi trường đóng gói đã được làm sạch 100% ==="
 
-    - name: Build Android APK with Pygame Backend
+    - name: Build Android APK with Kivy Backend
       run: |
         export ANDROID_NDK_HOME=/usr/local/lib/android/sdk/ndk/25.2.9519653
         export ANDROID_NDK_ROOT=/usr/local/lib/android/sdk/ndk/25.2.9519653
         export ANDROID_NDK=/usr/local/lib/android/sdk/ndk/25.2.9519653
         export ANDROID_HOME=/usr/local/lib/android/sdk
         
+        # Tiến hành build sạch sẽ từ đầu
         buildozer android debug
 
     - name: Upload APK Artifact
