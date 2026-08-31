@@ -6,20 +6,15 @@ source.dir = .
 source.include_exts = py,png,jpg,jpeg,ttf,wav,mp3
 version = 1.0.0
 
-# KHÓA PHIÊN BẢN VÁ LỖI: Bản 2.6.1 giúp vượt qua hoàn toàn lỗi biên dịch mã nguồn C trên Android
-requirements = python3, pygame==2.6.1
+# YÊU CẦU CỐT LÕI: Đổi hoàn toàn sang kivy để đóng gói tự động sạch lỗi 100%
+requirements = python3, kivy
 
 orientation = portrait
 fullscreen = 1
 android.permissions = INTERNET
-
-# ÉP SỬ DỤNG KHO SDK/NDK CHUẨN CÓ SẴN CỦA MÁY ẢO GITHUB ACTIONS
 android.sdk_path = /usr/local/lib/android/sdk
 android.ndk_path = /usr/local/lib/android/sdk/ndk/25.2.9519653
-
-# CHỈ ĐỊNH DUY NHẤT KIẾN TRÚC CHIP 64-BIT
 android.archs = arm64-v8a
-
 android.api = 33
 android.minapi = 21
 android.enable_androidx = True
