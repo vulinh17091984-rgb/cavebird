@@ -38,12 +38,13 @@ jobs:
         yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager --licenses
         echo "=== Đã tạo đường dẫn liên kết ảo lừa Buildozer thành công ==="
 
-    - name: Clean Old Corrupted Cache & Distribution
+    - name: Force Clear Corrupted Packages & Cache
       run: |
-        # Xóa sạch phân phối lỗi 3.14 cũ để ép nạp lại cấu hình 3.11 từ đầu
+        # Xóa triệt để các gói và tệp tin nạp lỗi của lần build trước để ép hệ thống đồng bộ lại từ đầu
         rm -rf .buildozer/android/platform/python-for-android/
         rm -rf .buildozer/android/platform/build-arm64-v8a/
-        echo "=== Đã làm sạch toàn bộ Cache phân phối lỗi thành công ==="
+        rm -rf ~/.buildozer/android/packages/
+        echo "=== Đã dọn dẹp môi trường biên dịch hoàn toàn sạch sẽ ==="
 
     - name: Build Android APK with Pygame Backend
       run: |
@@ -52,8 +53,5 @@ jobs:
         export ANDROID_NDK_ROOT=/usr/local/lib/android/sdk/ndk/25.2.9519653
         export ANDROID_NDK=/usr/local/lib/android/sdk/ndk/25.2.9519653
         
-        # ĐỒNG BỘ PHIÊN BẢN PYTHON: Ép p4a sử dụng đúng hostpython 3.11 để trùng khớp với target
-        export P4A_python3="==3.11"
-        
-        # Tiến hành chạy đóng gói đơn luồng sạch sẽ
+        # Tiến hành chạy đóng gói tự động không gán cấu hình cứng
         buildozer android debug
