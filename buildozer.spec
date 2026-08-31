@@ -6,8 +6,8 @@ source.dir = .
 source.include_exts = py,png,jpg,jpeg,ttf,wav,mp3
 version = 1.0.0
 
-# Sử dụng bản pygame tiền biên dịch dành riêng cho Android để chặn lỗi vỡ trận đóng gói C
-requirements = python3, pygame --pre
+# KHÓA PHIÊN BẢN VÁ LỖI: Bản 2.6.1 giúp vượt qua hoàn toàn lỗi biên dịch mã nguồn C trên Android
+requirements = python3, pygame==2.6.1
 
 orientation = portrait
 fullscreen = 1
