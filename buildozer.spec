@@ -6,7 +6,7 @@ source.dir = .
 source.include_exts = py,png,jpg,jpeg,ttf,wav,mp3
 version = 1.0.0
 
-# Sử dụng cấu hình mặc định để hệ thống tự đồng bộ lõi Python với hostpython
+# Sử dụng cấu hình python3 mặc định để p4a tự động đồng bộ luồng hostpython chuẩn
 requirements = python3, pygame
 
 orientation = portrait
@@ -17,7 +17,7 @@ android.permissions = INTERNET
 android.sdk_path = /usr/local/lib/android/sdk
 android.ndk_path = /usr/local/lib/android/sdk/ndk/25.2.9519653
 
-# CHỈ ĐỊNH KIẾN TRÚC CHIP 64-BIT 
+# CHỈ ĐỊNH DUY NHẤT KIẾN TRÚC CHIP 64-BIT (Giúp giảm tải RAM máy ảo, tránh lỗi vỡ trận create)
 android.archs = arm64-v8a
 
 android.api = 33
