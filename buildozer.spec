@@ -17,6 +17,9 @@ android.permissions = INTERNET
 android.sdk_path = /usr/local/lib/android/sdk
 android.ndk_path = /usr/local/lib/android/sdk/ndk/25.2.9519653
 
+# CHỈ ĐỊNH KIẾN TRÚC CHIP 64-BIT (Đã thêm dòng này để sửa lỗi sập RAM)
+android.archs = arm64-v8a
+
 android.api = 33
 android.minapi = 21
 android.enable_androidx = True
