@@ -13,15 +13,13 @@ orientation = portrait
 fullscreen = 1
 android.permissions = INTERNET
 
-# CẤU HÌNH BỘ CÔNG CỤ SDK ỔN ĐỊNH - KHÔNG ĐƯỢC VIẾT TRÙNG LẶP
-android.api = 33
-android.build_tools_version = 34.0.0
-android.minapi = 21
-android.ndk = 25c
-android.archs = arm64-v8a
-android.enable_androidx = True
+# ÉP SỬ DỤNG KHO SDK/NDK CHUẨN CÓ SẴN CỦA MÁY ẢO GITHUB ACTIONS
+android.sdk_path = /usr/local/lib/android/sdk
+android.ndk_path = /usr/local/lib/android/sdk/ndk/25.2.9519653
 
-# Định dạng xuất file cài đặt
+android.api = 33
+android.minapi = 21
+android.enable_androidx = True
 android.release_artifact = apk
 android.debug_artifact = apk
 
