@@ -40,7 +40,7 @@ jobs:
 
     - name: Clean Old Corrupted Cache & Distribution
       run: |
-        # Xóa triệt để thư mục tải gói cũ để giải phóng liên kết lỗi Python 3.14
+        # Xóa sạch phân phối lỗi 3.14 cũ để ép nạp lại cấu hình 3.11 từ đầu
         rm -rf .buildozer/android/platform/python-for-android/
         rm -rf .buildozer/android/platform/build-arm64-v8a/
         echo "=== Đã làm sạch toàn bộ Cache phân phối lỗi thành công ==="
@@ -51,6 +51,9 @@ jobs:
         export ANDROID_NDK_HOME=/usr/local/lib/android/sdk/ndk/25.2.9519653
         export ANDROID_NDK_ROOT=/usr/local/lib/android/sdk/ndk/25.2.9519653
         export ANDROID_NDK=/usr/local/lib/android/sdk/ndk/25.2.9519653
+        
+        # ĐỒNG BỘ PHIÊN BẢN PYTHON: Ép p4a sử dụng đúng hostpython 3.11 để trùng khớp với target
+        export P4A_python3="==3.11"
         
         # Tiến hành chạy đóng gói đơn luồng sạch sẽ
         buildozer android debug
