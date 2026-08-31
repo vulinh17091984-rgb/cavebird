@@ -31,12 +31,18 @@ jobs:
         pip install --upgrade pip
         pip install Cython==0.29.33 buildozer
 
+    - name: Clean Corrupted Distribution Cache
+      run: |
+        # Xóa sạch thư mục phân phối cũ bị lỗi để ép p4a đóng gói lại từ đầu một cách sạch sẽ
+        rm -rf .buildozer/android/platform/build-arm64-v8a/dists/
+        echo "=== Đã dọn dẹp phân phối lỗi thành công ==="
+
     - name: Build Android APK with Pygame Backend
       run: |
-        # XÓA BIẾN MÔI TRƯỜNG NDK CỦA GITHUB ĐỂ TRÁNH XUNG ĐỘT PHIÊN BẢN
+        # Gỡ bỏ các biến môi trường NDK mặc định của GitHub
         unset ANDROID_NDK_HOME
         unset ANDROID_NDK_ROOT
         unset ANDROID_NDK
         
-        # Đồng ý điều khoản và tiến hành biên dịch
+        # Đồng ý điều khoản bản quyền và tiến hành biên dịch
         yes | buildozer android debug
