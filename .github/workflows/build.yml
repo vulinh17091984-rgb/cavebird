@@ -13,7 +13,7 @@ jobs:
       with:
         python-version: '3.10'
 
-    - name: Cache Buildozer và Android SDK
+    - name: Cache Buildozer
       uses: actions/cache@v4
       with:
         path: |
@@ -31,35 +31,12 @@ jobs:
         pip install --upgrade pip
         pip install Cython==0.29.33 buildozer
 
-    - name: Force Accept Android Licenses via System SDK
+    - name: Accept Android System Licenses
       run: |
-        # Thiết lập biến môi trường trỏ trực tiếp vào kho Android SDK chuẩn có sẵn của máy ảo GitHub
-        export ANDROID_HOME=/usr/local/lib/android/sdk
-        export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
-        
-        # Đồng ý toàn bộ bản quyền điều khoản của Google chính thống
-        yes | sdkmanager --licenses
-        
-        # Cài đặt chính xác phiên bản Build-Tools và API cần thiết vào kho lưu trữ hệ thống
-        yes | sdkmanager "build-tools;34.0.0" "platforms;android-33" "platform-tools"
-        
-        # Tạo liên kết đánh lừa Buildozer sang thư mục hệ thống đã cài đặt sẵn để đồng bộ Aidl
-        mkdir -p $HOME/.buildozer/android/platform/android-sdk/build-tools/37.0.0/
-        cp /usr/local/lib/android/sdk/build-tools/34.0.0/aidl $HOME/.buildozer/android/platform/android-sdk/build-tools/37.0.0/aidl || true
-        echo "=== Đã đồng bộ bản quyền Google SDK hệ thống thành công ==="
-
-    - name: Clean Corrupted Distribution Cache
-      run: |
-        rm -rf .buildozer/android/platform/build-arm64-v8a/dists/
+        # Ép đồng ý bản quyền trên kho SDK chính thức của GitHub Actions
+        yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager --licenses
 
     - name: Build Android APK with Pygame Backend
       run: |
-        # Ép Buildozer nhận diện kho SDK hệ thống đã được đồng ý bản quyền trọn vẹn
-        export ANDROID_HOME=/usr/local/lib/android/sdk
-        
-        unset ANDROID_NDK_HOME
-        unset ANDROID_NDK_ROOT
-        unset ANDROID_NDK
-        
-        # Chạy lệnh đóng gói ứng dụng
+        # Chạy lệnh đóng gói trực tiếp bằng SDK hệ thống đã khai báo trong file spec
         buildozer android debug
