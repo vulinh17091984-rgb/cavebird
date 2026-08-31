@@ -6,8 +6,8 @@ source.dir = .
 source.include_exts = py,png,jpg,jpeg,ttf,wav,mp3
 version = 1.0.0
 
-# Sử dụng cấu hình python3 mặc định để p4a tự động đồng bộ luồng hostpython chuẩn
-requirements = python3, pygame
+# ÉP PHIÊN BẢN PYGAME 2.6.0: Sửa triệt để lỗi biên dịch fatal error 'longintrepr.h'
+requirements = python3, pygame==2.6.0
 
 orientation = portrait
 fullscreen = 1
@@ -17,7 +17,7 @@ android.permissions = INTERNET
 android.sdk_path = /usr/local/lib/android/sdk
 android.ndk_path = /usr/local/lib/android/sdk/ndk/25.2.9519653
 
-# CHỈ ĐỊNH DUY NHẤT KIẾN TRÚC CHIP 64-BIT (Giúp giảm tải RAM máy ảo, tránh lỗi vỡ trận create)
+# CHỈ ĐỊNH DUY NHẤT KIẾN TRÚC CHIP 64-BIT
 android.archs = arm64-v8a
 
 android.api = 33
