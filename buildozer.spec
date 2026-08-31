@@ -6,7 +6,7 @@ source.dir = .
 source.include_exts = py,png,jpg,jpeg,ttf,wav,mp3
 version = 1.0.0
 
-# Ép hệ thống dùng Python 3.11 ổn định để p4a không tải nhầm bản v3.14 lỗi mạng nữa
+# KHÓA CHẶT PHIÊN BẢN PYTHON 3.11 (Sửa lỗi lệch phiên bản 3.11 != 3.14.2)
 requirements = python3==3.11, pygame
 
 orientation = portrait
@@ -17,7 +17,7 @@ android.permissions = INTERNET
 android.sdk_path = /usr/local/lib/android/sdk
 android.ndk_path = /usr/local/lib/android/sdk/ndk/25.2.9519653
 
-# CHỈ ĐỊNH KIẾN TRÚC CHIP 64-BIT (Đã thêm dòng này để sửa lỗi sập RAM)
+# CHỈ ĐỊNH KIẾN TRÚC CHIP 64-BIT 
 android.archs = arm64-v8a
 
 android.api = 33
