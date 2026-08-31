@@ -18,70 +18,33 @@ jobs:
         sudo dpkg --add-architecture i386
         sudo apt-get update
         sudo apt-get install -y build-essential libsqlite3-dev sqlite3 bzip2 libbz2-dev zlib1g-dev libssl-dev openssl libgdbm-dev libgdbm-compat-dev liblzma-dev libreadline-dev libffi-dev uuid-dev libffi7 libssl3
-        sudo apt-get install -y libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
-        sudo apt-get install -y libstdc++6:i386 zlib1g:i386 openjdk-17-jdk
+        sudo apt-get install -y libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev unzip openjdk-17-jdk
         pip install --upgrade pip
-        pip install Cython==0.29.33 buildozer
+        pip install Cython==0.29.33 python-for-android
 
     - name: Setup Virtual SDK Paths for Buildozer
       run: |
         sudo mkdir -p /usr/local/lib/android/sdk/tools/bin
         sudo ln -sf /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager /usr/local/lib/android/sdk/tools/bin/sdkmanager
         yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager --licenses
-        echo "=== Đã tạo đường dẫn liên kết ảo lừa Buildozer thành công ==="
+        echo "=== Đã tạo đường dẫn liên kết ảo lừa hệ thống thành công ==="
 
-    - name: Wipe Corrupted File and System Cache
+    - name: Pure Android Compilation via Direct Toolchain (ĐƯỜNG THẲNG KHÔNG DÙNG BUILDOZER)
       run: |
-        # DÙNG QUYỀN SUDO: Ép xóa sạch mọi thư mục cấu hình ẩn của cả buildozer và p4a trong hệ thống máy ảo
-        rm -f buildozer.spec
-        sudo rm -rf .buildozer/
-        sudo rm -rf ~/.buildozer/
-        sudo rm -rf ~/.local/share/python-for-android/
-        sudo rm -rf ~/.config/buildozer/
-        echo "=== Đã giải phóng hoàn toàn bộ nhớ cấu hình hệ thống cũ ==="
-
-    - name: Force Write Perfect Kivy Buildozer Spec
-      run: |
-        # Tạo file spec mới tinh, đổi hẳn tên package thành cavebirdkivy để ép tạo môi trường dist mới
-        cat << 'EOF' > buildozer.spec
-        [app]
-        title = CaveBirdKivy
-        package.name = cavebirdkivy
-        package.domain = org.vulinh
-        source.dir = .
-        source.include_exts = py,png,jpg,jpeg,ttf,wav,mp3
-        version = 1.2.0
-        requirements = python3, kivy
-        orientation = portrait
-        fullscreen = 1
-        android.permissions = INTERNET
-        android.sdk_path = /usr/local/lib/android/sdk
-        android.ndk_path = /usr/local/lib/android/sdk/ndk/25.2.9519653
-        android.archs = arm64-v8a
-        android.api = 33
-        android.minapi = 21
-        android.enable_androidx = True
-        android.release_artifact = apk
-        android.debug_artifact = apk
-        [buildozer]
-        log_level = 0
-        warn_on_root = 1
-        EOF
-        echo "=== Đã khóa cấu hình Kivy mới tinh thành công ==="
-
-    - name: Build Android APK with Kivy Backend (CẤU HÌNH LỆNH ÉP KHUNG)
-      run: |
+        # Ép ghim các đường dẫn SDK hệ thống chuẩn của GitHub Actions
         export ANDROID_NDK_HOME=/usr/local/lib/android/sdk/ndk/25.2.9519653
         export ANDROID_NDK_ROOT=/usr/local/lib/android/sdk/ndk/25.2.9519653
         export ANDROID_NDK=/usr/local/lib/android/sdk/ndk/25.2.9519653
         export ANDROID_HOME=/usr/local/lib/android/sdk
         
-        # ÉP CÂU LỆNH: Khai báo trực tiếp cờ đóng gói Kivy di động ngay trong câu lệnh build chính
-        # Cách này bẻ gãy hoàn toàn cơ chế tự nạp lùi cờ lệnh cũ của hệ thống
-        buildozer android debug --requirements=python3,kivy
+        # BƯỚC 1: Gọi thẳng nhân p4a tạo cấu trúc phân phối đồ họa Kivy chuẩn
+        p4a create --dist_name=cavebirdkivy --bootstrap=sdl2 --requirements=python3,kivy --arch=arm64-v8a --sdk-dir=$ANDROID_HOME --ndk-dir=$ANDROID_NDK --ndk-api=21 --color=always
+        
+        # BƯỚC 2: Ra lệnh đóng gói trực tiếp tệp tin cài đặt APK cho dự án
+        p4a apk --dist_name=cavebirdkivy --name="Cave Bird App" --version=1.3.0 --package=org.vulinh.cavebirdkivy --private=. --permission=INTERNET --orientation=portrait --arch=arm64-v8a --color=always
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: CaveBird-Game-APK
-        path: bin/*.apk
+        path: "*.apk"
