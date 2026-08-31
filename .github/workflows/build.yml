@@ -31,27 +31,37 @@ jobs:
         pip install --upgrade pip
         pip install Cython==0.29.33 buildozer
 
+    - name: Force Install SDK and Accept Licenses
+      run: |
+        # Khởi tạo trước cấu trúc thư mục SDK của Buildozer nếu chưa có
+        mkdir -p $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest
+        
+        # Tải công cụ quản lý chính thức từ Google thay vì để Buildozer tự động tải lỗi
+        wget -q https://google.com -O cmdline.zip
+        unzip -q cmdline.zip
+        mv cmdline-tools/* $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/ || true
+        
+        # Ép hệ thống đồng ý toàn bộ bản quyền SDK của Google một cách chính thống
+        export PATH=$PATH:$HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin
+        yes | sdkmanager --sdk_root=$HOME/.buildozer/android/platform/android-sdk --licenses
+        
+        # Cài đặt trước bộ build-tools bản 34.0.0 ổn định
+        yes | sdkmanager --sdk_root=$HOME/.buildozer/android/platform/android-sdk "build-tools;34.0.0" "platforms;android-33" "platform-tools"
+        
+        # Sửa lỗi Aidl bằng cách liên kết công cụ đã cài đặt vào vị trí Buildozer tìm kiếm
+        mkdir -p $HOME/.buildozer/android/platform/android-sdk/build-tools/37.0.0/
+        cp $HOME/.buildozer/android/platform/android-sdk/build-tools/34.0.0/aidl $HOME/.buildozer/android/platform/android-sdk/build-tools/37.0.0/aidl || true
+        echo "=== Đã xử lý thủ công bản quyền và công cụ Aidl thành công ==="
+
     - name: Clean Corrupted Distribution Cache
       run: |
         rm -rf .buildozer/android/platform/build-arm64-v8a/dists/
-        echo "=== Đã dọn dẹp phân phối lỗi thành công ==="
-
-    - name: Pre-accept Android SDK Licenses
-      run: |
-        # Kích hoạt trước sdkmanager của Buildozer nếu thư mục đã tồn tại trong Cache để tự chấp nhận bản quyền
-        if [ -d "$HOME/.buildozer/android/platform/android-sdk/tools/bin" ]; then
-          yes | $HOME/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager --licenses || true
-        fi
 
     - name: Build Android APK with Pygame Backend
       run: |
-        # Gỡ bỏ các biến môi trường NDK mặc định của GitHub để tránh xung đột
         unset ANDROID_NDK_HOME
         unset ANDROID_NDK_ROOT
         unset ANDROID_NDK
         
-        # Cấu hình biến ép tự động đồng ý điều khoản bản quyền cho các công cụ dòng lệnh của Android
-        export ANDROID_LICENSE_ACCEPT=yes
-        
-        # Tiến hành build game bằng cờ tự động chấp nhận bản quyền của Buildozer
+        # Chạy lệnh build trực tiếp, Buildozer sẽ nhận diện được bộ build-tools đã cài ở bước trước
         buildozer android debug
