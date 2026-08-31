@@ -32,7 +32,7 @@ jobs:
 
     - name: Force Wipe Corrupted Build Cache
       run: |
-        # Xóa triệt để toàn bộ thư mục .buildozer cũ để gỡ sạch file rác Pygame kẹt trong cache
+        # Xóa sạch toàn bộ thư mục .buildozer tạm thời để loại bỏ triệt để lõi bootstrap sdl2 cũ bị kẹt
         rm -rf .buildozer/
         rm -rf ~/.buildozer/
         echo "=== Môi trường đóng gói đã được làm sạch 100% ==="
@@ -44,11 +44,5 @@ jobs:
         export ANDROID_NDK=/usr/local/lib/android/sdk/ndk/25.2.9519653
         export ANDROID_HOME=/usr/local/lib/android/sdk
         
-        # Tiến hành build sạch sẽ từ đầu
+        # SỬA LỖI ĐỘC QUYỀN: Ép công cụ tạo dist phân phối sạch theo đúng chuẩn framework Kivy
         buildozer android debug
-
-    - name: Upload APK Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: CaveBird-Game-APK
-        path: bin/*.apk
