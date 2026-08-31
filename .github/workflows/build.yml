@@ -36,6 +36,13 @@ jobs:
         rm -rf .buildozer/android/platform/build-arm64-v8a/dists/
         echo "=== Đã dọn dẹp phân phối lỗi thành công ==="
 
+    - name: Pre-accept Android SDK Licenses
+      run: |
+        # Kích hoạt trước sdkmanager của Buildozer nếu thư mục đã tồn tại trong Cache để tự chấp nhận bản quyền
+        if [ -d "$HOME/.buildozer/android/platform/android-sdk/tools/bin" ]; then
+          yes | $HOME/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager --licenses || true
+        fi
+
     - name: Build Android APK with Pygame Backend
       run: |
         # Gỡ bỏ các biến môi trường NDK mặc định của GitHub để tránh xung đột
@@ -43,13 +50,8 @@ jobs:
         unset ANDROID_NDK_ROOT
         unset ANDROID_NDK
         
-        # SỬA LỖI: Tạo trước file chấp nhận điều khoản bản quyền của Google 
-        # Cách này giúp Buildozer tự chạy mượt mà mà không cần dùng lệnh 'yes' gây tràn luồng hệ thống
-        mkdir -p ~/.android
-        touch ~/.android/repositories.cfg
-        mkdir -p .buildozer/android/platform/android-sdk/licenses
-        echo "24a0d11d14e8bbd0222a0f35d013a155d3c3c642" > .buildozer/android/platform/android-sdk/licenses/android-sdk-license
-        echo "84831b9409646a918e30573bab4c9c91346d8abd" > .buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license
+        # Cấu hình biến ép tự động đồng ý điều khoản bản quyền cho các công cụ dòng lệnh của Android
+        export ANDROID_LICENSE_ACCEPT=yes
         
-        # Tiến hành build game an toàn
+        # Tiến hành build game bằng cờ tự động chấp nhận bản quyền của Buildozer
         buildozer android debug
