@@ -31,27 +31,22 @@ jobs:
         pip install --upgrade pip
         pip install Cython==0.29.33 buildozer
 
-    - name: Force Install SDK and Accept Licenses
+    - name: Force Accept Android Licenses via System SDK
       run: |
-        # Khởi tạo trước cấu trúc thư mục SDK của Buildozer nếu chưa có
-        mkdir -p $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest
+        # Thiết lập biến môi trường trỏ trực tiếp vào kho Android SDK chuẩn có sẵn của máy ảo GitHub
+        export ANDROID_HOME=/usr/local/lib/android/sdk
+        export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
         
-        # Tải công cụ quản lý chính thức từ Google thay vì để Buildozer tự động tải lỗi
-        wget -q https://google.com -O cmdline.zip
-        unzip -q cmdline.zip
-        mv cmdline-tools/* $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/ || true
+        # Đồng ý toàn bộ bản quyền điều khoản của Google chính thống
+        yes | sdkmanager --licenses
         
-        # Ép hệ thống đồng ý toàn bộ bản quyền SDK của Google một cách chính thống
-        export PATH=$PATH:$HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin
-        yes | sdkmanager --sdk_root=$HOME/.buildozer/android/platform/android-sdk --licenses
+        # Cài đặt chính xác phiên bản Build-Tools và API cần thiết vào kho lưu trữ hệ thống
+        yes | sdkmanager "build-tools;34.0.0" "platforms;android-33" "platform-tools"
         
-        # Cài đặt trước bộ build-tools bản 34.0.0 ổn định
-        yes | sdkmanager --sdk_root=$HOME/.buildozer/android/platform/android-sdk "build-tools;34.0.0" "platforms;android-33" "platform-tools"
-        
-        # Sửa lỗi Aidl bằng cách liên kết công cụ đã cài đặt vào vị trí Buildozer tìm kiếm
+        # Tạo liên kết đánh lừa Buildozer sang thư mục hệ thống đã cài đặt sẵn để đồng bộ Aidl
         mkdir -p $HOME/.buildozer/android/platform/android-sdk/build-tools/37.0.0/
-        cp $HOME/.buildozer/android/platform/android-sdk/build-tools/34.0.0/aidl $HOME/.buildozer/android/platform/android-sdk/build-tools/37.0.0/aidl || true
-        echo "=== Đã xử lý thủ công bản quyền và công cụ Aidl thành công ==="
+        cp /usr/local/lib/android/sdk/build-tools/34.0.0/aidl $HOME/.buildozer/android/platform/android-sdk/build-tools/37.0.0/aidl || true
+        echo "=== Đã đồng bộ bản quyền Google SDK hệ thống thành công ==="
 
     - name: Clean Corrupted Distribution Cache
       run: |
@@ -59,9 +54,12 @@ jobs:
 
     - name: Build Android APK with Pygame Backend
       run: |
+        # Ép Buildozer nhận diện kho SDK hệ thống đã được đồng ý bản quyền trọn vẹn
+        export ANDROID_HOME=/usr/local/lib/android/sdk
+        
         unset ANDROID_NDK_HOME
         unset ANDROID_NDK_ROOT
         unset ANDROID_NDK
         
-        # Chạy lệnh build trực tiếp, Buildozer sẽ nhận diện được bộ build-tools đã cài ở bước trước
+        # Chạy lệnh đóng gói ứng dụng
         buildozer android debug
