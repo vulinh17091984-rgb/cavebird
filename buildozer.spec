@@ -6,8 +6,8 @@ source.dir = .
 source.include_exts = py,png,jpg,jpeg,ttf,wav,mp3
 version = 1.0.0
 
-# ĐỔI SANG PYGAME 2.5.2: Phiên bản ổn định nhất cho Android, cam kết vượt qua lỗi compile create
-requirements = python3, pygame==2.5.2
+# Sử dụng bản pygame tiền biên dịch dành riêng cho Android để chặn lỗi vỡ trận đóng gói C
+requirements = python3, pygame --pre
 
 orientation = portrait
 fullscreen = 1
