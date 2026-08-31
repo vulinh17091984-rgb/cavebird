@@ -25,7 +25,6 @@ jobs:
 
     - name: Setup Virtual SDK Paths for Buildozer
       run: |
-        # ĐÁNH LỪA BUILDOZER: Tạo thư mục ảo tools/bin để vượt qua bước quét sdkmanager cũ
         sudo mkdir -p /usr/local/lib/android/sdk/tools/bin
         sudo ln -sf /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager /usr/local/lib/android/sdk/tools/bin/sdkmanager
         yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager --licenses
@@ -33,20 +32,18 @@ jobs:
 
     - name: Force Wipe Corrupted Build Cache
       run: |
-        # Đã gỡ bỏ cache GitHub và ép xóa sạch mọi tệp phân phối chip cũ bị kẹt làm tràn RAM
+        # Xóa sạch vùng đệm lỗi cũ để ép hệ thống tải nhân phân phối sạch
         rm -rf .buildozer/
         rm -rf ~/.buildozer/
         echo "=== Đã làm sạch toàn bộ môi trường và bộ nhớ đệm lỗi ==="
 
     - name: Build Android APK with Pygame Backend
       run: |
-        # Ép hệ thống ghi đè đường dẫn NDK chuẩn ổn định của GitHub vào môi trường
         export ANDROID_NDK_HOME=/usr/local/lib/android/sdk/ndk/25.2.9519653
         export ANDROID_NDK_ROOT=/usr/local/lib/android/sdk/ndk/25.2.9519653
         export ANDROID_NDK=/usr/local/lib/android/sdk/ndk/25.2.9519653
         export ANDROID_HOME=/usr/local/lib/android/sdk
         
-        # Tiến hành biên dịch sạch từ đầu một cách an toàn
         buildozer android debug
 
     - name: Upload APK Artifact
