@@ -30,9 +30,19 @@ jobs:
         yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager --licenses
         echo "=== Đã tạo đường dẫn liên kết ảo lừa Buildozer thành công ==="
 
+    - name: Force Hard Wipe p4a Corrupted Cache
+      run: |
+        # ÉP XÓA CỨNG: Xóa sạch thư mục lưu cấu hình ẩn của python-for-android trong hệ thống máy ảo
+        # Bước này giúp gỡ bỏ hoàn toàn biến kẹt cũ '--bootstrap sdl2 --requirements=python3,pygame'
+        rm -rf ~/.local/share/python-for-android/
+        rm -rf ~/.cache/pip/
+        rm -rf .buildozer/
+        rm -rf ~/.buildozer/
+        echo "=== Môi trường đóng gói đã được làm sạch hoàn toàn ẩn 100% ==="
+
     - name: Force Write Perfect Buildozer Spec
       run: |
-        # ÉP CƯỠNG BỨC: Tự động ghi đè file cấu hình Kivy chuẩn xác, gỡ bỏ bootstrap sdl2 cũ
+        # Ghi đè file cấu hình Kivy chuẩn xác, đổi bootstrap sang nhân đồ họa chính thức của Kivy App
         cat << 'EOF' > buildozer.spec
         [app]
         title = Cave Bird
@@ -66,7 +76,7 @@ jobs:
         export ANDROID_NDK=/usr/local/lib/android/sdk/ndk/25.2.9519653
         export ANDROID_HOME=/usr/local/lib/android/sdk
         
-        # Tiến hành build sạch sẽ từ đầu với tệp spec vừa tạo
+        # Tiến hành dịch sạch hoàn toàn từ đầu
         buildozer android debug
 
     - name: Upload APK Artifact
